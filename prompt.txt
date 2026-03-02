@@ -1,0 +1,381 @@
+## Cursor Master Prompt
+
+You are a senior Laravel enterprise architect and UI/UX engineer.
+
+Create an **enterprise-grade, modular government-ready information system** using **Laravel 12**, **PostgreSQL**, **Blade**, and **Bootstrap 5**.
+
+This system must be designed as a **base platform** that can support many future modules without refactoring. The **Case Management System (CMS)** must be implemented as **Module 1**, built on top of this base platform.
+
+---
+
+Also Read Related Files in this projct folder
+
+## 1. Core Platform Architecture
+
+Build a clean, scalable, modular architecture suitable for long-term enterprise use.
+
+### Key Principles
+
+* Laravel 12 best practices
+* PostgreSQL-first design
+* Modular architecture (plug-and-play modules)
+* Service-layer business logic
+* Policy-based authorization
+* Auditability and compliance readiness
+
+### Directory Structure
+
+```
+app/
+  Core/
+    Auth/
+    RBAC/
+    Audit/
+    Settings/
+    Dashboard/
+Modules/
+  CaseManagement/
+    Controllers/
+    Models/
+    Services/
+    Requests/
+    Policies/
+    Migrations/
+    Views/
+    Routes/
+```
+
+Each module must:
+
+* Register its own routes
+* Define its own permissions
+* Expose menu items dynamically
+* Be removable without breaking the core system
+
+---
+
+## 2. Authentication, Roles & Permissions (spatia package)
+
+Implement a strong RBAC system.
+
+### Roles
+
+* Super Admin
+* Administrator
+* Officer
+* Viewer
+
+### Features
+
+* Secure login and logout
+* Password reset
+* Permission-based access control (no role hardcoding)
+* Middleware enforcement
+* Full audit logs for authentication events
+
+---
+
+## 3. Base UI Framework (Bootstrap 5 + Blade)
+
+Design a modern, clean enterprise interface.
+
+### Global Layout
+
+* Fixed sidebar
+* Top navigation bar
+* Content container
+* Footer
+
+### Reusable Components
+
+* Tables (sortable, paginated)
+* Forms with validation feedback
+* Alerts and notifications
+* Modals
+* Badges and status indicators
+
+---
+
+## 4. UI Mockups (Detailed Screen-by-Screen Wireframes)
+
+The following mockups describe **exact screen layouts**, component placement, and UI behavior. These should be implemented using **Bootstrap 5**, Blade components, and reusable partials.
+
+---
+
+### 4.1 Login Screen
+
+**Layout**
+
+* Full-height centered container
+* Card (max-width: 420px)
+
+**Elements (Top to Bottom)**
+
+* System logo
+* System name
+* Username input
+* Password input
+* Remember me checkbox
+* Primary button: Login
+* Text link: Forgot password
+
+**Behavior**
+
+* Inline validation errors
+* Disabled button during submit
+
+---
+
+### 4.2 Main Application Layout
+
+**Top Navbar**
+
+* Left: System name
+* Right:
+
+  * Notifications icon (badge count)
+  * User avatar
+  * Dropdown:
+
+    * Profile
+    * Change password
+    * Logout
+
+**Sidebar (Collapsible)**
+
+* Dashboard
+* Case Management
+
+  * Register Case
+  * Case List
+  * Reports
+* Administration (Admin only)
+
+  * Users
+  * Roles & Permissions
+  * System Settings
+
+**Content Area**
+
+* Page title
+* Breadcrumbs
+* Action buttons (right-aligned)
+
+---
+
+### 4.3 Dashboard Screen
+
+**Top Section (KPI Cards)**
+
+* Card 1: Total Cases
+* Card 2: Open Cases
+* Card 3: In Progress
+* Card 4: Closed Cases
+
+**Middle Section**
+
+* Bar chart: Cases by Status
+* Pie chart: Cases by Category
+
+**Bottom Section**
+
+* Recent Activity Table
+
+  * Date
+  * User
+  * Action
+  * Case Reference
+
+---
+
+### 4.4 Case List Screen
+
+**Header**
+
+* Title: Case Management
+* Button: Register New Case
+
+**Filter Panel**
+
+* Case Number (text)
+* Status (dropdown)
+* Assigned Officer (dropdown)
+* Date range (from / to)
+* Buttons: Search, Reset
+
+**Results Table**
+
+* Case No
+* Title
+* Category
+* Status (colored badge)
+* Assigned Officer
+* Created Date
+* Actions:
+
+  * View
+  * Edit (permission-based)
+
+---
+
+### 4.5 Register / Edit Case Screen
+
+**Form Layout (Two Columns)**
+
+**Left Column: Case Details**
+
+* Case Number (auto-generated, read-only)
+* Case Title
+* Category
+* Description (textarea)
+
+**Right Column: Assignment & Status**
+
+* Assigned Officer
+* Priority
+* Status
+
+**Footer Actions**
+
+* Save Draft
+* Save & Assign
+* Cancel
+
+---
+
+### 4.6 Case View Screen
+
+**Header Section**
+
+* Case Number
+* Case Title
+* Status badge
+* Action buttons: Edit, Change Status
+
+**Tabbed Interface**
+
+**Tab 1: Overview**
+
+* Case metadata (grid layout)
+* Assigned officer
+* Created date
+* Last updated
+
+**Tab 2: Documents**
+
+* Upload document button
+* Table:
+
+  * File name
+  * Type
+  * Uploaded by
+  * Date
+  * Actions (View, Download)
+
+**Tab 3: Notes**
+
+* Textarea: Add internal note
+* Button: Add Note
+* Timeline of notes
+
+**Tab 4: History**
+
+* Read-only audit timeline
+* User, action, timestamp
+
+---
+
+### 4.7 Reports Screen
+
+**Report Controls**
+
+* Report type selector
+* Date range selector
+* Generate report button
+
+**Report Output Area**
+
+* Summary metrics
+* Data table
+* Charts
+
+**Export Options**
+
+* Export PDF
+* Export Excel
+* Print
+
+---
+
+## 5. Case Management Module Logic
+
+### Core Features
+
+* Case registration with unique case numbers
+* Editable case details (permission-based)
+* Status lifecycle management
+* Officer assignment
+* Case notes and comments
+* Secure document attachment
+* Full case audit trail
+
+---
+
+## 6. Reporting Engine (Reusable)
+
+Design a generic reporting service:
+
+* Accepts filters
+* Supports grouping
+* Date-based queries
+* Export-ready
+
+Case reports include:
+
+* Total cases
+* Open vs closed
+* Cases per officer
+* Cases by category
+* Resolution time
+
+---
+
+## 7. Security & Compliance
+
+* CSRF protection
+* Form request validation
+* Policy-based authorization
+* Secure file storage
+* Audit logging for all critical actions
+
+---
+
+## 8. Database Standards
+
+* PostgreSQL
+* UUID primary keys where appropriate
+* Soft deletes
+* Foreign key constraints
+* Audit fields: created_by, updated_by
+
+---
+
+## 9. Seeders & Defaults
+
+* Default roles and permissions
+* Sample users
+* Sample cases
+
+---
+
+## 10. Quality Expectations
+
+* Production-ready code
+* Clean architecture
+* Well-commented
+* No shortcuts or demo logic
+* Designed for government and enterprise scale
+
+---
+
+Build this system step by step, starting with the base platform, then layering the Case Management module on top.
