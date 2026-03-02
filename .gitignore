@@ -34,3 +34,9 @@ Thumbs.db
 
 # OS files
 Desktop.ini
+
+# Project docs / source files (not needed in repo)
+IMPLEMENTATION_PLAN.md
+BRD_COMPLIANCE.md
+*.xlsm
+*.pdf
