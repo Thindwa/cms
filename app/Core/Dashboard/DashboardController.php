@@ -23,12 +23,10 @@ class DashboardController extends Controller
             ->pluck('total', 'status')
             ->toArray();
 
-        $casesByCategory = CaseModel::query()
-            ->selectRaw("coalesce(nullif(trim(nature_of_claim), ''), 'Uncategorized') as cat")
-            ->selectRaw('count(*) as total')
-            ->groupByRaw("coalesce(nullif(trim(nature_of_claim), ''), 'Uncategorized')")
-            ->orderByDesc('total')
-            ->pluck('total', 'cat')
+        $casesByCategory = CaseModel::pluck('nature_of_claim')
+            ->map(fn ($v) => filled($v) ? trim($v) : 'Uncategorized')
+            ->countBy()
+            ->sortDesc()
             ->toArray();
 
         $recentActivity = AuditLog::with('user')
