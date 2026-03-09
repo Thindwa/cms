@@ -4,7 +4,6 @@ namespace App\Modules\CaseManagement\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Models\CaseModel;
-use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PdfFacade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -37,14 +36,6 @@ class ReportController extends Controller
                     ->values()
                     ->toArray(),
             ],
-            'by_status' => [
-                'title' => 'Cases by Status',
-                'rows' => (clone $query)->get()
-                    ->groupBy('status')
-                    ->map(fn ($g, $status) => ['Status' => ucfirst(str_replace('_', ' ', $status)), 'Total' => $g->count()])
-                    ->values()
-                    ->toArray(),
-            ],
             'by_category' => [
                 'title' => 'Cases by Nature of Claim',
                 'rows' => (clone $query)->get()
@@ -55,7 +46,7 @@ class ReportController extends Controller
             ],
             default => [
                 'title' => 'Cases Summary',
-                'rows' => $this->summaryReportRows($query, $dateFrom, $dateTo),
+                'rows' => $this->summaryReportRows($query),
             ],
         };
 
@@ -83,31 +74,15 @@ class ReportController extends Controller
         ]);
     }
 
-    protected function summaryReportRows($query, Carbon $dateFrom, Carbon $dateTo): array
+    protected function summaryReportRows($query): array
     {
-        $closedInPeriod = CaseModel::query()
-            ->where('status', CaseModel::STATUS_CLOSED)
-            ->whereNotNull('closed_at')
-            ->whereBetween('closed_at', [$dateFrom, $dateTo->endOfDay()]);
-        $closedIds = $closedInPeriod->pluck('id');
-        $avgDays = $closedIds->isEmpty()
-            ? null
-            : round(
-                CaseModel::whereIn('id', $closedIds)
-                    ->get()
-                    ->avg(fn ($c) => $c->closed_at->diffInDays($c->created_at)),
-                1
-            );
-
         $rows = [
             ['Metric' => 'Total cases', 'Value' => (clone $query)->count()],
-            ['Metric' => 'Open', 'Value' => (clone $query)->where('status', 'open')->count()],
-            ['Metric' => 'In progress', 'Value' => (clone $query)->where('status', 'in_progress')->count()],
-            ['Metric' => 'Closed', 'Value' => (clone $query)->where('status', 'closed')->count()],
+            ['Metric' => 'With nature of claim', 'Value' => (clone $query)->whereNotNull('nature_of_claim')->count()],
+            ['Metric' => 'With documents', 'Value' => (clone $query)->has('documents')->count()],
+            ['Metric' => 'With notes', 'Value' => (clone $query)->has('notes')->count()],
         ];
-        if ($avgDays !== null) {
-            $rows[] = ['Metric' => 'Avg. days to close (cases closed in period)', 'Value' => $avgDays . ' days'];
-        }
+
         return $rows;
     }
 

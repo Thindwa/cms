@@ -12,9 +12,6 @@
 
 @section('content')
 <div class="d-flex align-items-center gap-2 mb-3">
-    <span class="badge {{ $case->status === 'open' ? 'bg-info' : ($case->status === 'in_progress' ? 'bg-warning text-dark' : 'bg-secondary') }}">
-        {{ ucfirst(str_replace('_', ' ', $case->status)) }}
-    </span>
     <span class="text-muted">{{ $case->title }}</span>
 </div>
 
@@ -42,9 +39,8 @@
             </div>
             <div class="col-md-6">
                 <table class="table table-sm">
-                    <tr><th class="text-muted" style="width:40%">Officer Dealing</th><td>{{ $case->assignedOfficer?->name ?? '—' }}</td></tr>
+                    <tr><th class="text-muted" style="width:40%">Officer Dealing</th><td>{{ $case->title }}</td></tr>
                     <tr><th class="text-muted">Entered By</th><td>{{ $case->createdByUser?->name ?? '—' }}</td></tr>
-                    <tr><th class="text-muted">Priority</th><td>{{ ucfirst($case->priority) }}</td></tr>
                     <tr><th class="text-muted">Created</th><td>{{ $case->created_at->format('Y-m-d H:i') }}</td></tr>
                     <tr><th class="text-muted">Last updated</th><td>{{ $case->updated_at->format('Y-m-d H:i') }}</td></tr>
                 </table>

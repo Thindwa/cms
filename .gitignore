@@ -19,6 +19,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/docs
 Homestead.json
 Homestead.yaml
 Thumbs.db
@@ -39,4 +40,9 @@ Desktop.ini
 IMPLEMENTATION_PLAN.md
 BRD_COMPLIANCE.md
 *.xlsm
+*.xlsx
 *.pdf
+*.docx
+*.doc
+*.pptx
+*.ppt

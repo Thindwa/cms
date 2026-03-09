@@ -7,7 +7,6 @@ use App\Modules\CaseManagement\Models\CaseModel;
 use App\Modules\CaseManagement\Requests\StoreCaseRequest;
 use App\Modules\CaseManagement\Requests\UpdateCaseRequest;
 use App\Modules\CaseManagement\Services\CaseManagementService;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,19 +21,13 @@ class CaseController extends Controller
 
     public function index(Request $request): View
     {
-        $query = CaseModel::query()->with(['assignedOfficer', 'createdByUser']);
+        $query = CaseModel::query()->with(['createdByUser']);
 
         if ($request->filled('case_number')) {
             $query->where('case_number', 'like', '%' . $request->case_number . '%');
         }
         if ($request->filled('title')) {
             $query->where('title', 'ilike', '%' . $request->title . '%');
-        }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        if ($request->filled('assigned_to')) {
-            $query->where('assigned_to', $request->assigned_to);
         }
         if ($request->filled('date_from')) {
             $query->whereDate('date_filed', '>=', $request->date_from);
@@ -45,7 +38,7 @@ class CaseController extends Controller
 
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $allowedSort = ['case_number', 'title', 'nature_of_claim', 'status', 'assigned_to', 'created_by', 'date_filed', 'created_at'];
+        $allowedSort = ['case_number', 'title', 'nature_of_claim', 'created_by', 'date_filed', 'created_at'];
         if (in_array($sortBy, $allowedSort, true)) {
             $query->orderBy($sortBy, $sortDir);
         } else {
@@ -53,16 +46,13 @@ class CaseController extends Controller
         }
 
         $cases = $query->paginate(15)->withQueryString();
-        $officers = User::orderBy('name')->get(['id', 'name', 'username']);
-
-        return view('case_management::cases.index', compact('cases', 'officers', 'sortBy', 'sortDir'));
+        return view('case_management::cases.index', compact('cases', 'sortBy', 'sortDir'));
     }
 
     public function create(): View
     {
         $caseNumber = $this->caseService->generateCaseNumber();
-        $officers = User::orderBy('name')->get(['id', 'name', 'username']);
-        return view('case_management::cases.create', compact('caseNumber', 'officers'));
+        return view('case_management::cases.create', compact('caseNumber'));
     }
 
     public function store(StoreCaseRequest $request): RedirectResponse
@@ -73,7 +63,7 @@ class CaseController extends Controller
 
     public function show(CaseModel $case): View
     {
-        $case->load(['assignedOfficer', 'createdByUser', 'documents.uploader', 'notes.user']);
+        $case->load(['createdByUser', 'documents.uploader', 'notes.user']);
         $auditLogs = \App\Core\Audit\AuditLog::where('auditable_type', CaseModel::class)
             ->where('auditable_id', $case->id)
             ->with('user')
@@ -85,8 +75,7 @@ class CaseController extends Controller
 
     public function edit(CaseModel $case): View
     {
-        $officers = User::orderBy('name')->get(['id', 'name', 'username']);
-        return view('case_management::cases.edit', compact('case', 'officers'));
+        return view('case_management::cases.edit', compact('case'));
     }
 
     public function update(UpdateCaseRequest $request, CaseModel $case): RedirectResponse

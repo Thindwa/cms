@@ -19,26 +19,8 @@
                 <input type="text" name="case_number" class="form-control form-control-sm" value="{{ request('case_number') }}" placeholder="Serial number">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Case title</label>
-                <input type="text" name="title" class="form-control form-control-sm" value="{{ request('title') }}" placeholder="Title">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">Status</label>
-                <select name="status" class="form-select form-select-sm">
-                    <option value="">All</option>
-                    <option value="open" {{ request('status') === 'open' ? 'selected' : '' }}>Open</option>
-                    <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                    <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Closed</option>
-                </select>
-            </div>
-            <div class="col-md-2">
                 <label class="form-label small">Officer Dealing</label>
-                <select name="assigned_to" class="form-select form-select-sm">
-                    <option value="">All</option>
-                    @foreach($officers as $o)
-                        <option value="{{ $o->id }}" {{ request('assigned_to') == $o->id ? 'selected' : '' }}>{{ $o->name }}</option>
-                    @endforeach
-                </select>
+                <input type="text" name="title" class="form-control form-control-sm" value="{{ request('title') }}" placeholder="Officer dealing">
             </div>
             <div class="col-md-2">
                 <label class="form-label small">Date from</label>
@@ -71,10 +53,8 @@
                         };
                     @endphp
                     <th>{!! $sortLink('case_number', 'Serial No') !!}</th>
-                    <th>{!! $sortLink('title', 'Title') !!}</th>
+                    <th>{!! $sortLink('title', 'Officer Dealing') !!}</th>
                     <th>{!! $sortLink('nature_of_claim', 'Nature of Claim') !!}</th>
-                    <th>{!! $sortLink('status', 'Status') !!}</th>
-                    <th>{!! $sortLink('assigned_to', 'Officer Dealing') !!}</th>
                     <th>{!! $sortLink('created_by', 'Entered By') !!}</th>
                     <th>{!! $sortLink('date_filed', 'Date Filed') !!}</th>
                     <th class="text-end">Actions</th>
@@ -86,18 +66,6 @@
                         <td>{{ $case->case_number }}</td>
                         <td>{{ Str::limit($case->title, 40) }}</td>
                         <td>{{ $case->nature_of_claim ?? '—' }}</td>
-                        <td>
-                            @php
-                                $badge = match($case->status) {
-                                    'open' => 'bg-info',
-                                    'in_progress' => 'bg-warning text-dark',
-                                    'closed' => 'bg-secondary',
-                                    default => 'bg-light text-dark'
-                                };
-                            @endphp
-                            <span class="badge {{ $badge }}">{{ ucfirst(str_replace('_', ' ', $case->status)) }}</span>
-                        </td>
-                        <td>{{ $case->assignedOfficer?->name ?? '—' }}</td>
                         <td>{{ $case->createdByUser?->name ?? '—' }}</td>
                         <td>{{ $case->date_filed?->format('Y-m-d') ?? '—' }}</td>
                         <td class="text-end">
@@ -108,7 +76,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-muted py-4">No cases found.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">No cases found.</td></tr>
                 @endforelse
             </tbody>
         </table>

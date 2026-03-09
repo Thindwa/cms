@@ -11,17 +11,22 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
+        $totalCases = CaseModel::count();
+
         $kpis = [
-            'total' => CaseModel::count(),
-            'open' => CaseModel::where('status', 'open')->count(),
-            'in_progress' => CaseModel::where('status', 'in_progress')->count(),
-            'closed' => CaseModel::where('status', 'closed')->count(),
+            'total' => $totalCases,
+            'with_documents' => CaseModel::has('documents')->count(),
+            'with_notes' => CaseModel::has('notes')->count(),
+            'uncategorized' => CaseModel::whereNull('nature_of_claim')
+                ->orWhere('nature_of_claim', '')
+                ->count(),
         ];
 
-        $casesByStatus = CaseModel::selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status')
-            ->toArray();
+        $coverageData = [
+            'With Documents' => $kpis['with_documents'],
+            'With Notes' => $kpis['with_notes'],
+            'Uncategorized' => $kpis['uncategorized'],
+        ];
 
         $casesByCategory = CaseModel::pluck('nature_of_claim')
             ->map(fn ($v) => filled($v) ? trim($v) : 'Uncategorized')
@@ -40,17 +45,14 @@ class DashboardController extends Controller
             $caseNumbers = CaseModel::whereIn('id', $caseIds)->pluck('case_number', 'id')->toArray();
         }
 
-        $statusLabels = array_map(
-            fn (string $k): string => ucfirst(str_replace('_', ' ', $k)),
-            array_keys($casesByStatus)
-        );
-        $statusValues = array_values($casesByStatus);
+        $coverageLabels = array_keys($coverageData);
+        $coverageValues = array_values($coverageData);
         $categoryLabels = array_keys($casesByCategory);
         $categoryValues = array_values($casesByCategory);
 
         return view('dashboard.index', compact(
-            'kpis', 'casesByStatus', 'casesByCategory', 'recentActivity', 'caseNumbers',
-            'statusLabels', 'statusValues', 'categoryLabels', 'categoryValues'
+            'kpis', 'casesByCategory', 'recentActivity', 'caseNumbers',
+            'coverageLabels', 'coverageValues', 'categoryLabels', 'categoryValues'
         ));
     }
 }

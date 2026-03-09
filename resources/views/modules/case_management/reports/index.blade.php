@@ -13,7 +13,6 @@
                 <select name="report_type" class="form-select form-select-sm">
                     <option value="summary" {{ ($reportType ?? '') === 'summary' ? 'selected' : '' }}>Cases summary</option>
                     <option value="by_officer" {{ ($reportType ?? '') === 'by_officer' ? 'selected' : '' }}>Cases per officer</option>
-                    <option value="by_status" {{ ($reportType ?? '') === 'by_status' ? 'selected' : '' }}>Cases by status</option>
                     <option value="by_category" {{ ($reportType ?? '') === 'by_category' ? 'selected' : '' }}>Cases by nature of claim</option>
                 </select>
             </div>

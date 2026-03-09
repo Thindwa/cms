@@ -22,9 +22,6 @@ class StoreCaseRequest extends FormRequest
             'claimant' => ['nullable', 'string', 'max:255'],
             'cause_number' => ['nullable', 'string', 'max:64'],
             'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'string', 'in:open,in_progress,closed'],
-            'priority' => ['nullable', 'string', 'in:low,medium,high'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
         ];
     }
 }

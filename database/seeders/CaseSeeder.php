@@ -16,9 +16,9 @@ class CaseSeeder extends Seeder
         }
 
         $cases = [
-            ['title' => 'Sample Case One', 'nature_of_claim' => 'Contract', 'status' => 'open', 'claimant' => 'John Doe', 'defendant' => 'Acme Corp'],
-            ['title' => 'Sample Case Two', 'nature_of_claim' => 'Employment', 'status' => 'in_progress', 'claimant' => 'Jane Smith', 'defendant' => 'XYZ Ltd'],
-            ['title' => 'Sample Case Three', 'nature_of_claim' => 'Property', 'status' => 'closed', 'claimant' => 'Bob Wilson', 'defendant' => 'State'],
+            ['title' => 'Sample Case One', 'nature_of_claim' => 'Contract', 'claimant' => 'John Doe', 'defendant' => 'Acme Corp'],
+            ['title' => 'Sample Case Two', 'nature_of_claim' => 'Employment', 'claimant' => 'Jane Smith', 'defendant' => 'XYZ Ltd'],
+            ['title' => 'Sample Case Three', 'nature_of_claim' => 'Property', 'claimant' => 'Bob Wilson', 'defendant' => 'State'],
         ];
 
         $year = now()->format('Y');

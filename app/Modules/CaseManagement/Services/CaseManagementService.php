@@ -45,15 +45,6 @@ class CaseManagementService
         $old = $case->toArray();
         $data['updated_by'] = Auth::id();
 
-        if (isset($data['status'])) {
-            if ($data['status'] === CaseModel::STATUS_CLOSED && empty($data['closed_at'])) {
-                $data['closed_at'] = now();
-            }
-            if ($data['status'] !== CaseModel::STATUS_CLOSED) {
-                $data['closed_at'] = null;
-            }
-        }
-
         $case->update($data);
         $this->audit->log('case.updated', CaseModel::class, $case->id, $old, $case->fresh()->toArray());
         return $case;
