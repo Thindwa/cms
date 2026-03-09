@@ -7,6 +7,7 @@ use App\Core\Dashboard\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ExcelImportAgreementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
@@ -23,6 +24,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('excel-import-agreement', [ExcelImportAgreementController::class, 'index'])->name('excel-import-agreement.index');
+    Route::get('excel-import-agreement/new', [ExcelImportAgreementController::class, 'create'])->name('excel-import-agreement.create');
+    Route::post('excel-import-agreement', [ExcelImportAgreementController::class, 'store'])->name('excel-import-agreement.store');
+    Route::get('excel-import-agreement/{response}', [ExcelImportAgreementController::class, 'show'])->name('excel-import-agreement.show');
 
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');

@@ -19,6 +19,12 @@
                 <li class="nav-item">
                     <a class="nav-link text-white {{ request()->routeIs('dashboard') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ request()->routeIs('excel-import-agreement.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('excel-import-agreement.create') }}">Import Agreement Form</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ request()->routeIs('excel-import-agreement.index') || request()->routeIs('excel-import-agreement.show') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('excel-import-agreement.index') }}">Import Agreement Responses</a>
+                </li>
                 @php $registry = app(\App\Core\Support\ModuleRegistry::class); @endphp
                 @foreach($registry->allMenuItems() as $group)
                     @if(count($group['children'] ?? []) > 0)
