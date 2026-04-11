@@ -21,9 +21,9 @@ class UserController extends Controller
         $query = User::query()->with('roles');
         if ($request->filled('search')) {
             $q = $request->search;
-            $query->where(fn ($qry) => $qry->where('name', 'ilike', "%{$q}%")
-                ->orWhere('username', 'ilike', "%{$q}%")
-                ->orWhere('email', 'ilike', "%{$q}%"));
+            $query->where(fn ($qry) => $qry->where('name', 'like', "%{$q}%")
+                ->orWhere('username', 'like', "%{$q}%")
+                ->orWhere('email', 'like', "%{$q}%"));
         }
         $users = $query->orderBy('name')->paginate(15)->withQueryString();
         return view('admin.users.index', compact('users'));

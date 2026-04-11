@@ -19,8 +19,20 @@
                 <input type="text" name="case_number" class="form-control form-control-sm" value="{{ request('case_number') }}" placeholder="Serial number">
             </div>
             <div class="col-md-2">
+                <label class="form-label small">AG Ref No</label>
+                <input type="text" name="reference_number" class="form-control form-control-sm" value="{{ request('reference_number') }}" placeholder="AG/...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Civil Case No</label>
+                <input type="text" name="civil_case_number" class="form-control form-control-sm" value="{{ request('civil_case_number') }}" placeholder="Civil case no">
+            </div>
+            <div class="col-md-2">
                 <label class="form-label small">Officer Dealing</label>
                 <input type="text" name="title" class="form-control form-control-sm" value="{{ request('title') }}" placeholder="Officer dealing">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Party</label>
+                <input type="text" name="party" class="form-control form-control-sm" value="{{ request('party') }}" placeholder="Claimant/Defendant">
             </div>
             <div class="col-md-2">
                 <label class="form-label small">Date from</label>
@@ -29,6 +41,14 @@
             <div class="col-md-2">
                 <label class="form-label small">Date to</label>
                 <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Hearing from</label>
+                <input type="date" name="hearing_date_from" class="form-control form-control-sm" value="{{ request('hearing_date_from') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Hearing to</label>
+                <input type="date" name="hearing_date_to" class="form-control form-control-sm" value="{{ request('hearing_date_to') }}">
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary btn-sm me-1">Search</button>
@@ -53,10 +73,15 @@
                         };
                     @endphp
                     <th>{!! $sortLink('case_number', 'Serial No') !!}</th>
+                    <th>{!! $sortLink('reference_number', 'AG Ref No') !!}</th>
+                    <th>{!! $sortLink('civil_case_number', 'Civil Case No') !!}</th>
                     <th>{!! $sortLink('title', 'Officer Dealing') !!}</th>
+                    <th>{!! $sortLink('claimant', 'Claimant') !!}</th>
+                    <th>{!! $sortLink('defendant', 'Defendant') !!}</th>
                     <th>{!! $sortLink('nature_of_claim', 'Nature of Claim') !!}</th>
                     <th>{!! $sortLink('created_by', 'Entered By') !!}</th>
                     <th>{!! $sortLink('date_filed', 'Date Filed') !!}</th>
+                    <th>{!! $sortLink('hearing_date', 'Hearing Date') !!}</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
@@ -64,10 +89,15 @@
                 @forelse($cases as $case)
                     <tr>
                         <td>{{ $case->case_number }}</td>
+                        <td>{{ $case->reference_number ?? '—' }}</td>
+                        <td>{{ $case->civil_case_number ?? '—' }}</td>
                         <td>{{ Str::limit($case->title, 40) }}</td>
+                        <td>{{ $case->claimant ?? '—' }}</td>
+                        <td>{{ $case->defendant ?? '—' }}</td>
                         <td>{{ $case->nature_of_claim ?? '—' }}</td>
                         <td>{{ $case->createdByUser?->name ?? '—' }}</td>
                         <td>{{ $case->date_filed?->format('Y-m-d') ?? '—' }}</td>
+                        <td>{{ $case->hearing_date?->format('Y-m-d') ?? '—' }}</td>
                         <td class="text-end">
                             <a href="{{ route('cases.show', $case) }}" class="btn btn-sm btn-outline-primary">View</a>
                             @can('cases.edit')
@@ -76,13 +106,20 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="text-center text-muted py-4">No cases found.</td></tr>
+                    <tr><td colspan="11" class="text-center text-muted py-4">No cases found.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    @if($cases->hasPages())
-        <div class="card-footer bg-white">{{ $cases->links() }}</div>
-    @endif
+    <div class="card-footer bg-white">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+            <small class="text-muted">
+                Showing {{ $cases->firstItem() ?? 0 }} to {{ $cases->lastItem() ?? 0 }} of {{ $cases->total() }} results
+            </small>
+            @if($cases->hasPages())
+                <div>{{ $cases->onEachSide(1)->links() }}</div>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection

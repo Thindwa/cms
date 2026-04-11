@@ -91,6 +91,23 @@
     </div>
 </div>
 
+<div class="card chart-card shadow-sm mb-4">
+    <div class="card-header">Upcoming Case Dates (Next 7 Days)</div>
+    <div class="card-body py-2">
+        @forelse($upcomingCases ?? [] as $case)
+            <div class="activity-item">
+                <span class="activity-dot"></span>
+                <div class="flex-grow-1">
+                    <div class="activity-action">{{ $case->case_number }} · {{ $case->title }}</div>
+                    <div class="activity-meta">Hearing date: {{ $case->hearing_date?->format('Y-m-d') ?? '—' }}</div>
+                </div>
+            </div>
+        @empty
+            <p class="text-muted small mb-0 py-3">No upcoming hearing dates in the next 7 days.</p>
+        @endforelse
+    </div>
+</div>
+
 <div class="card chart-card shadow-sm">
     <div class="card-header">Recent Activity</div>
     <div class="card-body py-2">

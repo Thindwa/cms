@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Core\Support\ModuleRegistry;
-use App\Core\Support\PlaceholderModule;
 use App\Modules\CaseManagement\CaseManagementModule;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\View;
@@ -16,10 +15,6 @@ class ModulesServiceProvider extends ServiceProvider
         $this->app->singleton(ModuleRegistry::class, function () {
             $registry = new ModuleRegistry();
             $registry->register(new CaseManagementModule());
-            // Base platform: future modules (placeholders until implemented)
-            $registry->register(new PlaceholderModule('complaints', 'Complaints', 'complaints'));
-
-            $registry->register(new PlaceholderModule('asset_management', 'Asset Management', 'asset-management'));
 
             return $registry;
         });

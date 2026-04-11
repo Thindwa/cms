@@ -11,6 +11,17 @@ class SettingsService
         'date_format' => 'Y-m-d',
         'time_format' => 'H:i',
         'items_per_page' => '15',
+        'mail_mailer' => 'smtp',
+        'smtp_host' => '',
+        'smtp_port' => '587',
+        'smtp_username' => '',
+        'smtp_password' => '',
+        'smtp_encryption' => 'tls',
+        'smtp_from_address' => '',
+        'smtp_from_name' => 'Case Management System',
+        'upcoming_notifications_enabled' => '0',
+        'upcoming_notifications_days' => '7',
+        'upcoming_notifications_time' => '08:00',
     ];
 
     public function get(string $key, mixed $default = null): mixed

@@ -18,7 +18,9 @@ class CaseModel extends Model
     protected $fillable = [
         'case_number',
         'date_filed',
+        'hearing_date',
         'reference_number',
+        'civil_case_number',
         'defendant',
         'nature_of_claim',
         'claimant',
@@ -34,6 +36,7 @@ class CaseModel extends Model
     {
         return [
             'date_filed' => 'date',
+            'hearing_date' => 'date',
         ];
     }
 
@@ -50,6 +53,11 @@ class CaseModel extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(CaseDocument::class, 'case_id');
+    }
+
+    public function trashedDocuments(): HasMany
+    {
+        return $this->hasMany(CaseDocument::class, 'case_id')->onlyTrashed();
     }
 
     public function notes(): HasMany

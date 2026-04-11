@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class LoginController extends Controller
 {
@@ -32,11 +34,29 @@ class LoginController extends Controller
             'password.required' => 'Password is required.',
         ]);
 
-        if (! Auth::attempt([
-            'username' => $validated['username'],
-            'password' => $validated['password'],
-        ], (bool) ($validated['remember'] ?? false))) {
-            $this->audit->log('auth.login.failed', null, null, null, [
+        $remember = (bool) ($validated['remember'] ?? false);
+        $loginInput = trim($validated['username']);
+        $password = $validated['password'];
+
+        $attempts = [
+            ['username' => $loginInput, 'password' => $password],
+        ];
+
+        // Support email-based login as well to reduce login friction.
+        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
+            $attempts[] = ['email' => $loginInput, 'password' => $password];
+        }
+
+        $authenticated = false;
+        foreach ($attempts as $credentials) {
+            if (Auth::attempt($credentials, $remember)) {
+                $authenticated = true;
+                break;
+            }
+        }
+
+        if (! $authenticated) {
+            $this->safeAudit('auth.login.failed', [
                 'username' => $validated['username'],
             ]);
 
@@ -46,18 +66,30 @@ class LoginController extends Controller
         }
 
         $request->session()->regenerate();
-        $this->audit->log('auth.login.success');
+        $this->safeAudit('auth.login.success');
 
         return redirect()->intended(route('dashboard'));
     }
 
     public function logout(Request $request): RedirectResponse
     {
-        $this->audit->log('auth.logout');
+        $this->safeAudit('auth.logout');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function safeAudit(string $action, ?array $newValues = null): void
+    {
+        try {
+            $this->audit->log($action, null, null, null, $newValues);
+        } catch (Throwable $e) {
+            Log::warning('Audit logging failed during auth flow', [
+                'action' => $action,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

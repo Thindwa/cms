@@ -16,7 +16,9 @@ class UpdateCaseRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'date_filed' => ['nullable', 'date'],
+            'hearing_date' => ['nullable', 'date'],
             'reference_number' => ['nullable', 'string', 'max:64'],
+            'civil_case_number' => ['nullable', 'string', 'max:64'],
             'defendant' => ['nullable', 'string', 'max:255'],
             'nature_of_claim' => ['nullable', 'string', 'max:255'],
             'claimant' => ['nullable', 'string', 'max:255'],

@@ -32,6 +32,7 @@ class CaseManagementService
     public function create(array $data): CaseModel
     {
         $data['case_number'] = $data['case_number'] ?? $this->generateCaseNumber();
+        $data['description'] = $this->sanitizeRichText($data['description'] ?? null);
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
 
@@ -43,10 +44,32 @@ class CaseManagementService
     public function update(CaseModel $case, array $data): CaseModel
     {
         $old = $case->toArray();
+        $data['description'] = $this->sanitizeRichText($data['description'] ?? null);
         $data['updated_by'] = Auth::id();
 
         $case->update($data);
         $this->audit->log('case.updated', CaseModel::class, $case->id, $old, $case->fresh()->toArray());
         return $case;
+    }
+
+    protected function sanitizeRichText(?string $html): ?string
+    {
+        if ($html === null) {
+            return null;
+        }
+
+        $html = trim($html);
+        if ($html === '') {
+            return null;
+        }
+
+        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><a><blockquote><h3><h4><h5><h6><span>';
+        $clean = strip_tags($html, $allowedTags);
+        $clean = preg_replace('/<\s*script\b[^>]*>(.*?)<\s*\/\s*script>/is', '', $clean) ?? $clean;
+        $clean = preg_replace('/\son\w+="[^"]*"/i', '', $clean) ?? $clean;
+        $clean = preg_replace('/\son\w+=\'[^\']*\'/i', '', $clean) ?? $clean;
+        $clean = preg_replace('/\s(href|src)\s*=\s*([\'"])\s*javascript:[^\'"]*\2/i', ' $1="#"', $clean) ?? $clean;
+
+        return trim($clean) !== '' ? $clean : null;
     }
 }

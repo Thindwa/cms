@@ -11,14 +11,19 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        $totalCases = CaseModel::count();
+        $baseCases = CaseModel::query()
+            ->whereNotNull('case_number')
+            ->where('case_number', '!=', '');
+        $totalCases = (clone $baseCases)->count();
 
         $kpis = [
             'total' => $totalCases,
-            'with_documents' => CaseModel::has('documents')->count(),
-            'with_notes' => CaseModel::has('notes')->count(),
-            'uncategorized' => CaseModel::whereNull('nature_of_claim')
-                ->orWhere('nature_of_claim', '')
+            'with_documents' => (clone $baseCases)->has('documents')->count(),
+            'with_notes' => (clone $baseCases)->has('notes')->count(),
+            'uncategorized' => (clone $baseCases)->where(function ($query) {
+                $query->whereNull('nature_of_claim')
+                    ->orWhere('nature_of_claim', '');
+            })
                 ->count(),
         ];
 
@@ -28,11 +33,17 @@ class DashboardController extends Controller
             'Uncategorized' => $kpis['uncategorized'],
         ];
 
-        $casesByCategory = CaseModel::pluck('nature_of_claim')
+        $casesByCategory = (clone $baseCases)->pluck('nature_of_claim')
             ->map(fn ($v) => filled($v) ? trim($v) : 'Uncategorized')
             ->countBy()
             ->sortDesc()
             ->toArray();
+        $upcomingCases = (clone $baseCases)
+            ->whereNotNull('hearing_date')
+            ->whereBetween('hearing_date', [now()->toDateString(), now()->addDays(7)->toDateString()])
+            ->orderBy('hearing_date')
+            ->limit(10)
+            ->get(['id', 'case_number', 'title', 'hearing_date']);
 
         $recentActivity = AuditLog::with('user')
             ->orderByDesc('created_at')
@@ -51,7 +62,7 @@ class DashboardController extends Controller
         $categoryValues = array_values($casesByCategory);
 
         return view('dashboard.index', compact(
-            'kpis', 'casesByCategory', 'recentActivity', 'caseNumbers',
+            'kpis', 'casesByCategory', 'recentActivity', 'caseNumbers', 'upcomingCases',
             'coverageLabels', 'coverageValues', 'categoryLabels', 'categoryValues'
         ));
     }

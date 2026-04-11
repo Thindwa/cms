@@ -22,9 +22,19 @@
                         @error('date_filed')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Reference Number</label>
+                        <label class="form-label">Upcoming Hearing Date</label>
+                        <input type="date" name="hearing_date" class="form-control @error('hearing_date') is-invalid @enderror" value="{{ old('hearing_date') }}">
+                        @error('hearing_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">AG Reference Number</label>
                         <input type="text" name="reference_number" class="form-control @error('reference_number') is-invalid @enderror" value="{{ old('reference_number') }}">
                         @error('reference_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Civil Case Number</label>
+                        <input type="text" name="civil_case_number" class="form-control @error('civil_case_number') is-invalid @enderror" value="{{ old('civil_case_number') }}">
+                        @error('civil_case_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Defendant</label>
@@ -52,8 +62,8 @@
                         @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
+                        <label class="form-label">Case Summary (Primary)</label>
+                        <textarea id="description-editor" name="description" class="form-control @error('description') is-invalid @enderror" rows="8">{{ old('description') }}</textarea>
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -67,3 +77,20 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    tinymce.init({
+        selector: '#description-editor',
+        height: 280,
+        menubar: false,
+        branding: false,
+        plugins: 'lists link table code wordcount',
+        toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link table | removeformat | code',
+        content_style: 'body { font-family: Segoe UI, Arial, sans-serif; font-size: 14px; }'
+    });
+});
+</script>
+@endpush

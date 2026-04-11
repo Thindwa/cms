@@ -21,9 +21,10 @@
         <form method="POST" action="{{ route('login') }}" id="login-form">
             @csrf
             <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
+                <label for="username" class="form-label">Username or Email</label>
                 <input type="text" class="form-control @error('username') is-invalid @enderror" id="username"
-                    name="username" value="{{ old('username') }}" required autofocus autocomplete="username">
+                    name="username" value="{{ old('username') }}" required autofocus autocomplete="username"
+                    placeholder="e.g. admin or admin@example.com">
                 @error('username')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

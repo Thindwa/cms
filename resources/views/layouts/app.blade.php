@@ -6,6 +6,26 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} - @yield('title', 'Dashboard')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        #sidebar nav { padding: .5rem .5rem .75rem .5rem; }
+        #sidebar .nav-item { margin-bottom: .15rem; }
+        #sidebar .nav-item.mt-2 { margin-top: .85rem !important; }
+        #sidebar .nav-link { border-radius: .45rem; }
+        .sidebar-link {
+            display: flex !important;
+            align-items: center;
+            gap: .6rem;
+            padding: .45rem .75rem !important;
+            line-height: 1.2;
+        }
+        .sidebar-link i {
+            width: 1.1rem;
+            text-align: center;
+            opacity: .9;
+        }
+        #sidebar .text-uppercase { padding-left: .75rem; letter-spacing: .04em; }
+    </style>
     @stack('styles')
 </head>
 <body class="d-flex">
@@ -17,13 +37,9 @@
         <nav class="p-2">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link text-white {{ request()->routeIs('dashboard') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ request()->routeIs('excel-import-agreement.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('excel-import-agreement.create') }}">Import Agreement Form</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ request()->routeIs('excel-import-agreement.index') || request()->routeIs('excel-import-agreement.show') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('excel-import-agreement.index') }}">Import Agreement Responses</a>
+                    <a class="nav-link text-white sidebar-link {{ request()->routeIs('dashboard') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('dashboard') }}">
+                        <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+                    </a>
                 </li>
                 @php $registry = app(\App\Core\Support\ModuleRegistry::class); @endphp
                 @foreach($registry->allMenuItems() as $group)
@@ -32,7 +48,13 @@
                             <span class="nav-link text-secondary small text-uppercase">{{ $group['label'] }}</span>
                             @foreach($group['children'] as $item)
                                 @if(empty($item['permission']) || auth()->user()->can($item['permission']))
-                                    <a class="nav-link text-white d-block py-1 ps-3 small {{ request()->routeIs($item['route']) ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route($item['route']) }}">{{ $item['label'] }}</a>
+                                    @php
+                                        $routePattern = str_ends_with($item['route'], '.index') ? str_replace('.index', '.*', $item['route']) : null;
+                                        $active = request()->routeIs($item['route']) || ($routePattern && request()->routeIs($routePattern));
+                                    @endphp
+                                    <a class="nav-link text-white d-block small sidebar-link {{ $active ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route($item['route']) }}">
+                                        <i class="bi {{ $item['icon'] ?? 'bi-dot' }}"></i><span>{{ $item['label'] }}</span>
+                                    </a>
                                 @endif
                             @endforeach
                         </li>
@@ -41,9 +63,21 @@
                 @if(auth()->user()->can('admin.users') || auth()->user()->can('admin.roles') || auth()->user()->can('admin.settings'))
                 <li class="nav-item mt-2">
                     <span class="nav-link text-secondary small text-uppercase">Administration</span>
-                    @can('admin.users')<a class="nav-link text-white d-block py-1 ps-3 small" href="{{ Route::has('admin.users.index') ? route('admin.users.index') : '#' }}">Users</a>@endcan
-                    @can('admin.roles')<a class="nav-link text-white d-block py-1 ps-3 small" href="{{ Route::has('admin.roles.index') ? route('admin.roles.index') : '#' }}">Roles & Permissions</a>@endcan
-                    @can('admin.settings')<a class="nav-link text-white d-block py-1 ps-3 small" href="{{ Route::has('admin.settings.index') ? route('admin.settings.index') : '#' }}">System Settings</a>@endcan
+                    @can('admin.users')
+                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.users.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.users.index') ? route('admin.users.index') : '#' }}">
+                            <i class="bi bi-people"></i><span>Users</span>
+                        </a>
+                    @endcan
+                    @can('admin.roles')
+                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.roles.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.roles.index') ? route('admin.roles.index') : '#' }}">
+                            <i class="bi bi-shield-lock"></i><span>Roles & Permissions</span>
+                        </a>
+                    @endcan
+                    @can('admin.settings')
+                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.settings.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.settings.index') ? route('admin.settings.index') : '#' }}">
+                            <i class="bi bi-gear"></i><span>System Settings</span>
+                        </a>
+                    @endcan
                 </li>
                 @endif
             </ul>
@@ -92,7 +126,81 @@
         </main>
     </div>
 
+    <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmActionTitle">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmActionMessage">
+                    Are you sure you want to continue?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmActionSubmit">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const modalElement = document.getElementById('confirmActionModal');
+            if (!modalElement || typeof bootstrap === 'undefined') {
+                return;
+            }
+
+            const modal = new bootstrap.Modal(modalElement);
+            const titleEl = document.getElementById('confirmActionTitle');
+            const messageEl = document.getElementById('confirmActionMessage');
+            const submitEl = document.getElementById('confirmActionSubmit');
+            let pendingForm = null;
+
+            document.addEventListener('submit', function (event) {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) {
+                    return;
+                }
+
+                if (form.dataset.confirmed === '1') {
+                    form.dataset.confirmed = '0';
+                    return;
+                }
+
+                if (!form.dataset.confirmMessage) {
+                    return;
+                }
+
+                event.preventDefault();
+                pendingForm = form;
+                titleEl.textContent = form.dataset.confirmTitle || 'Confirm Action';
+                messageEl.textContent = form.dataset.confirmMessage || 'Are you sure you want to continue?';
+                submitEl.textContent = form.dataset.confirmButton || 'Continue';
+                modal.show();
+            }, true);
+
+            submitEl.addEventListener('click', function () {
+                if (!pendingForm) {
+                    return;
+                }
+
+                pendingForm.dataset.confirmed = '1';
+                if (typeof pendingForm.requestSubmit === 'function') {
+                    pendingForm.requestSubmit();
+                } else {
+                    pendingForm.submit();
+                }
+                pendingForm = null;
+                modal.hide();
+            });
+
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                pendingForm = null;
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 </html>

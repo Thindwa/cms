@@ -21,13 +21,28 @@ class CaseController extends Controller
 
     public function index(Request $request): View
     {
-        $query = CaseModel::query()->with(['createdByUser']);
+        $query = CaseModel::query()
+            ->with(['createdByUser'])
+            ->whereNotNull('case_number')
+            ->where('case_number', '!=', '');
 
         if ($request->filled('case_number')) {
             $query->where('case_number', 'like', '%' . $request->case_number . '%');
         }
         if ($request->filled('title')) {
-            $query->where('title', 'ilike', '%' . $request->title . '%');
+            $query->where('title', 'like', '%' . $request->title . '%');
+        }
+        if ($request->filled('reference_number')) {
+            $query->where('reference_number', 'like', '%' . $request->reference_number . '%');
+        }
+        if ($request->filled('civil_case_number')) {
+            $query->where('civil_case_number', 'like', '%' . $request->civil_case_number . '%');
+        }
+        if ($request->filled('party')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('claimant', 'like', '%' . $request->party . '%')
+                    ->orWhere('defendant', 'like', '%' . $request->party . '%');
+            });
         }
         if ($request->filled('date_from')) {
             $query->whereDate('date_filed', '>=', $request->date_from);
@@ -35,10 +50,16 @@ class CaseController extends Controller
         if ($request->filled('date_to')) {
             $query->whereDate('date_filed', '<=', $request->date_to);
         }
+        if ($request->filled('hearing_date_from')) {
+            $query->whereDate('hearing_date', '>=', $request->hearing_date_from);
+        }
+        if ($request->filled('hearing_date_to')) {
+            $query->whereDate('hearing_date', '<=', $request->hearing_date_to);
+        }
 
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $allowedSort = ['case_number', 'title', 'nature_of_claim', 'created_by', 'date_filed', 'created_at'];
+        $allowedSort = ['case_number', 'reference_number', 'civil_case_number', 'title', 'nature_of_claim', 'claimant', 'defendant', 'created_by', 'date_filed', 'hearing_date', 'created_at'];
         if (in_array($sortBy, $allowedSort, true)) {
             $query->orderBy($sortBy, $sortDir);
         } else {
@@ -63,7 +84,7 @@ class CaseController extends Controller
 
     public function show(CaseModel $case): View
     {
-        $case->load(['createdByUser', 'documents.uploader', 'notes.user']);
+        $case->load(['createdByUser', 'documents.uploader', 'trashedDocuments.deletedByUser', 'notes.user']);
         $auditLogs = \App\Core\Audit\AuditLog::where('auditable_type', CaseModel::class)
             ->where('auditable_id', $case->id)
             ->with('user')

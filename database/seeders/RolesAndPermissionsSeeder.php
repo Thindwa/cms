@@ -48,6 +48,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $officer = Role::findOrCreate('Officer', 'web');
         $officer->givePermissionTo([
             'dashboard.view', 'cases.view', 'cases.create', 'cases.edit', 'cases.assign',
+            'cases.import',
             'reports.view', 'reports.export',
         ]);
 
