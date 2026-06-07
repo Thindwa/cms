@@ -5,7 +5,7 @@
 @section('breadcrumbs', 'Administration / Users')
 
 @section('actions')
-    @can('admin.users')
+    @can('admin.users.create')
         <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">Add user</a>
     @endcan
 @endsection
@@ -37,7 +37,19 @@
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->roles->pluck('name')->join(', ') ?: '—' }}</td>
                         <td class="text-end">
-                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            @can('admin.users.edit')
+                                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            @endcan
+                            @can('admin.users.delete')
+                                <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline"
+                                      data-confirm-title="Delete User"
+                                      data-confirm-message="Delete user {{ $user->name }}?"
+                                      data-confirm-button="Delete User">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            @endcan
                         </td>
                     </tr>
                 @empty

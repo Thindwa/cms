@@ -19,7 +19,7 @@ class CaseDocumentController extends Controller
 
     public function store(Request $request, CaseModel $case): RedirectResponse
     {
-        $this->authorize('update', $case);
+        $this->authorize('uploadDocument', $case);
         $request->validate([
             'documents' => ['required', 'array', 'min:1'],
             'documents.*' => ['required', 'file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif'],
@@ -60,7 +60,7 @@ class CaseDocumentController extends Controller
 
     public function destroy(CaseModel $case, string $document): RedirectResponse
     {
-        $this->authorize('update', $case);
+        $this->authorize('deleteDocument', $case);
         $doc = CaseDocument::query()->where('case_id', $case->id)->findOrFail($document);
         $this->documentService->softDelete($doc);
 
@@ -69,7 +69,7 @@ class CaseDocumentController extends Controller
 
     public function restore(CaseModel $case, string $document): RedirectResponse
     {
-        $this->authorize('update', $case);
+        $this->authorize('restoreDocument', $case);
         $doc = CaseDocument::onlyTrashed()->where('case_id', $case->id)->findOrFail($document);
         $this->documentService->restore($doc);
 
@@ -78,7 +78,7 @@ class CaseDocumentController extends Controller
 
     public function recycleBin(Request $request): View
     {
-        abort_unless(auth()->user()?->can('cases.view'), 403);
+        $this->authorize('viewAny', CaseDocument::class);
 
         $query = CaseDocument::onlyTrashed()
             ->with(['case:id,case_number,title', 'deletedByUser:id,name'])
@@ -102,9 +102,8 @@ class CaseDocumentController extends Controller
 
     public function purge(string $document): RedirectResponse
     {
-        abort_unless(auth()->user()?->can('cases.edit'), 403);
-
         $doc = CaseDocument::onlyTrashed()->findOrFail($document);
+        $this->authorize('purge', $doc);
         $this->documentService->purge($doc);
 
         return redirect()->route('cases.documents.recycle-bin')

@@ -1,0 +1,119 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - link "Case Management System" [ref=e4] [cursor=pointer]:
+      - /url: http://cms.test/dashboard
+    - navigation [ref=e5]:
+      - list [ref=e6]:
+        - listitem [ref=e7]:
+          - link " Dashboard" [ref=e8] [cursor=pointer]:
+            - /url: http://cms.test/dashboard
+            - generic [ref=e9]: 
+            - generic [ref=e10]: Dashboard
+        - listitem [ref=e11]:
+          - generic [ref=e12]: Case Management
+          - link " Case List" [ref=e13] [cursor=pointer]:
+            - /url: http://cms.test/cases
+            - generic [ref=e14]: 
+            - generic [ref=e15]: Case List
+          - link " Reports" [ref=e16] [cursor=pointer]:
+            - /url: http://cms.test/cases/reports
+            - generic [ref=e17]: 
+            - generic [ref=e18]: Reports
+          - link " Excel Imports" [ref=e19] [cursor=pointer]:
+            - /url: http://cms.test/cases/imports
+            - generic [ref=e20]: 
+            - generic [ref=e21]: Excel Imports
+          - link " Recycle Bin" [ref=e22] [cursor=pointer]:
+            - /url: http://cms.test/cases/documents/recycle-bin
+            - generic [ref=e23]: 
+            - generic [ref=e24]: Recycle Bin
+        - listitem [ref=e25]:
+          - generic [ref=e26]: Administration
+          - link " Users" [ref=e27] [cursor=pointer]:
+            - /url: http://cms.test/admin/users
+            - generic [ref=e28]: 
+            - generic [ref=e29]: Users
+          - link " Roles & Permissions" [ref=e30] [cursor=pointer]:
+            - /url: http://cms.test/admin/roles
+            - generic [ref=e31]: 
+            - generic [ref=e32]: Roles & Permissions
+          - link " System Settings" [ref=e33] [cursor=pointer]:
+            - /url: http://cms.test/admin/settings
+            - generic [ref=e34]: 
+            - generic [ref=e35]: System Settings
+  - generic [ref=e36]:
+    - banner [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Case Management / CASE-2026-00654
+        - generic [ref=e40]:
+          - generic [ref=e41]: Super Admin
+          - button "Profile" [ref=e43] [cursor=pointer]
+    - main [ref=e44]:
+      - generic [ref=e45]:
+        - heading "Case CASE-2026-00654" [level=1] [ref=e46]
+        - link "Edit" [ref=e48] [cursor=pointer]:
+          - /url: http://cms.test/cases/019d90e2-81ff-7035-b194-ffac6e8984d9/edit
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - generic [ref=e52]: Case Overview
+          - heading "CASE-2026-00654" [level=4] [ref=e53]
+          - generic [ref=e54]: "Officer Dealing: QA OFFICER"
+        - generic [ref=e55]:
+          - generic [ref=e56]: "Created: 2026-04-15 11:24"
+          - generic [ref=e57]: "Updated: 2026-04-15 11:24"
+      - tablist [ref=e58]:
+        - tab "Overview" [selected] [ref=e59] [cursor=pointer]
+        - tab "Documents" [ref=e60] [cursor=pointer]
+        - tab "Officer Notes / Comments (Updates)" [ref=e61] [cursor=pointer]
+        - tab "History" [ref=e62] [cursor=pointer]
+      - tabpanel [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e68]:
+              - heading "Case Details" [level=6] [ref=e69]
+              - list [ref=e70]:
+                - listitem [ref=e71]:
+                  - generic [ref=e72]: Serial Number
+                  - generic [ref=e73]: CASE-2026-00654
+                - listitem [ref=e74]:
+                  - generic [ref=e75]: Case Title
+                  - generic [ref=e76]: PW QA Case Title
+                - listitem [ref=e77]:
+                  - generic [ref=e78]: Status
+                  - generic [ref=e79]: Open
+                - listitem [ref=e80]:
+                  - generic [ref=e81]: Date Filed
+                  - generic [ref=e82]: —
+                - listitem [ref=e83]:
+                  - generic [ref=e84]: Upcoming Hearing Date
+                  - generic [ref=e85]: —
+                - listitem [ref=e86]:
+                  - generic [ref=e87]: AG Reference Number
+                  - generic [ref=e88]: —
+                - listitem [ref=e89]:
+                  - generic [ref=e90]: Civil Case Number
+                  - generic [ref=e91]: —
+                - listitem [ref=e92]:
+                  - generic [ref=e93]: Cause Number
+                  - generic [ref=e94]: —
+                - listitem [ref=e95]:
+                  - generic [ref=e96]: Nature of Claim
+                  - generic [ref=e97]: —
+            - generic [ref=e99]:
+              - heading "Case Summary (Primary)" [level=6] [ref=e100]
+              - paragraph [ref=e101]: No case summary added.
+          - generic [ref=e104]:
+            - heading "Parties and Ownership" [level=6] [ref=e105]
+            - list [ref=e106]:
+              - listitem [ref=e107]:
+                - generic [ref=e108]: Officer Dealing
+                - generic [ref=e109]: QA OFFICER
+              - listitem [ref=e110]:
+                - generic [ref=e111]: Entered By
+                - generic [ref=e112]: Super Admin
+              - listitem [ref=e113]:
+                - generic [ref=e114]: Claimant
+                - generic [ref=e115]: QA Claimant
+              - listitem [ref=e116]:
+                - generic [ref=e117]: Defendant
+                - generic [ref=e118]: —

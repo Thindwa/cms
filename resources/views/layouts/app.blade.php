@@ -60,22 +60,27 @@
                         </li>
                     @endif
                 @endforeach
-                @if(auth()->user()->can('admin.users') || auth()->user()->can('admin.roles') || auth()->user()->can('admin.settings'))
+                @if(auth()->user()->can('admin.users.view') || auth()->user()->can('admin.roles.view') || auth()->user()->can('admin.settings.view') || auth()->user()->can('admin.audit.view'))
                 <li class="nav-item mt-2">
                     <span class="nav-link text-secondary small text-uppercase">Administration</span>
-                    @can('admin.users')
+                    @can('admin.users.view')
                         <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.users.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.users.index') ? route('admin.users.index') : '#' }}">
                             <i class="bi bi-people"></i><span>Users</span>
                         </a>
                     @endcan
-                    @can('admin.roles')
+                    @can('admin.roles.view')
                         <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.roles.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.roles.index') ? route('admin.roles.index') : '#' }}">
                             <i class="bi bi-shield-lock"></i><span>Roles & Permissions</span>
                         </a>
                     @endcan
-                    @can('admin.settings')
+                    @can('admin.settings.view')
                         <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.settings.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.settings.index') ? route('admin.settings.index') : '#' }}">
                             <i class="bi bi-gear"></i><span>System Settings</span>
+                        </a>
+                    @endcan
+                    @can('admin.audit.view')
+                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.audit.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.audit.index') ? route('admin.audit.index') : '#' }}">
+                            <i class="bi bi-journal-text"></i><span>Audit Logs</span>
                         </a>
                     @endcan
                 </li>
@@ -95,7 +100,7 @@
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Profile</button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             @if(Route::has('profile.edit'))<li><a class="dropdown-item" href="{{ route('profile.edit') }}">Profile</a></li>@endif
-                            @if(Route::has('password.request'))<li><a class="dropdown-item" href="{{ route('password.request') }}">Change password</a></li>@endif
+                            @if(Route::has('profile.password.edit'))<li><a class="dropdown-item" href="{{ route('profile.password.edit') }}">Change password</a></li>@endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">

@@ -1,0 +1,439 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - link "Case Management System" [ref=e4] [cursor=pointer]:
+      - /url: http://cms.test/dashboard
+    - navigation [ref=e5]:
+      - list [ref=e6]:
+        - listitem [ref=e7]:
+          - link " Dashboard" [ref=e8] [cursor=pointer]:
+            - /url: http://cms.test/dashboard
+            - generic [ref=e9]: 
+            - generic [ref=e10]: Dashboard
+        - listitem [ref=e11]:
+          - generic [ref=e12]: Case Management
+          - link " Case List" [ref=e13] [cursor=pointer]:
+            - /url: http://cms.test/cases
+            - generic [ref=e14]: 
+            - generic [ref=e15]: Case List
+          - link " Reports" [ref=e16] [cursor=pointer]:
+            - /url: http://cms.test/cases/reports
+            - generic [ref=e17]: 
+            - generic [ref=e18]: Reports
+          - link " Excel Imports" [ref=e19] [cursor=pointer]:
+            - /url: http://cms.test/cases/imports
+            - generic [ref=e20]: 
+            - generic [ref=e21]: Excel Imports
+          - link " Recycle Bin" [ref=e22] [cursor=pointer]:
+            - /url: http://cms.test/cases/documents/recycle-bin
+            - generic [ref=e23]: 
+            - generic [ref=e24]: Recycle Bin
+        - listitem [ref=e25]:
+          - generic [ref=e26]: Administration
+          - link " Users" [ref=e27] [cursor=pointer]:
+            - /url: http://cms.test/admin/users
+            - generic [ref=e28]: 
+            - generic [ref=e29]: Users
+          - link " Roles & Permissions" [ref=e30] [cursor=pointer]:
+            - /url: http://cms.test/admin/roles
+            - generic [ref=e31]: 
+            - generic [ref=e32]: Roles & Permissions
+          - link " System Settings" [ref=e33] [cursor=pointer]:
+            - /url: http://cms.test/admin/settings
+            - generic [ref=e34]: 
+            - generic [ref=e35]: System Settings
+  - generic [ref=e36]:
+    - banner [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Case Management / Case List
+        - generic [ref=e40]:
+          - generic [ref=e41]: Super Admin
+          - button "Profile" [ref=e43] [cursor=pointer]
+    - main [ref=e44]:
+      - generic [ref=e45]:
+        - heading "Case Management" [level=1] [ref=e46]
+        - link "Register New Case" [ref=e48] [cursor=pointer]:
+          - /url: http://cms.test/cases/create
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: Case No
+          - textbox "Serial number" [ref=e54]
+        - generic [ref=e55]:
+          - generic [ref=e56]: AG Ref No
+          - textbox "AG/..." [ref=e57]
+        - generic [ref=e58]:
+          - generic [ref=e59]: Case Title
+          - textbox "Case title" [ref=e60]
+        - generic [ref=e61]:
+          - generic [ref=e62]: Civil Case No
+          - textbox "Civil case no" [ref=e63]
+        - generic [ref=e64]:
+          - generic [ref=e65]: Officer Dealing
+          - textbox "Officer dealing" [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]: Party
+          - textbox "Claimant/Defendant" [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e71]: Date from
+          - textbox [ref=e72]
+        - generic [ref=e73]:
+          - generic [ref=e74]: Date to
+          - textbox [ref=e75]
+        - generic [ref=e76]:
+          - generic [ref=e77]: Hearing from
+          - textbox [ref=e78]
+        - generic [ref=e79]:
+          - generic [ref=e80]: Hearing to
+          - textbox [ref=e81]
+        - generic [ref=e82]:
+          - button "Search" [ref=e83] [cursor=pointer]
+          - link "Reset" [ref=e84] [cursor=pointer]:
+            - /url: http://cms.test/cases
+      - generic [ref=e85]:
+        - table [ref=e87]:
+          - rowgroup [ref=e88]:
+            - row "Serial No AG Ref No Case Title Civil Case No Officer Dealing Status Claimant Defendant Nature of Claim Entered By Date Filed Hearing Date Actions" [ref=e89]:
+              - columnheader "Serial No" [ref=e90]:
+                - link "Serial No" [ref=e91] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=case_number&sort_dir=asc
+              - columnheader "AG Ref No" [ref=e92]:
+                - link "AG Ref No" [ref=e93] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=reference_number&sort_dir=asc
+              - columnheader "Case Title" [ref=e94]:
+                - link "Case Title" [ref=e95] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=case_title&sort_dir=asc
+              - columnheader "Civil Case No" [ref=e96]:
+                - link "Civil Case No" [ref=e97] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=civil_case_number&sort_dir=asc
+              - columnheader "Officer Dealing" [ref=e98]:
+                - link "Officer Dealing" [ref=e99] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=title&sort_dir=asc
+              - columnheader "Status" [ref=e100]:
+                - link "Status" [ref=e101] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=status&sort_dir=asc
+              - columnheader "Claimant" [ref=e102]:
+                - link "Claimant" [ref=e103] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=claimant&sort_dir=asc
+              - columnheader "Defendant" [ref=e104]:
+                - link "Defendant" [ref=e105] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=defendant&sort_dir=asc
+              - columnheader "Nature of Claim" [ref=e106]:
+                - link "Nature of Claim" [ref=e107] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=nature_of_claim&sort_dir=asc
+              - columnheader "Entered By" [ref=e108]:
+                - link "Entered By" [ref=e109] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=created_by&sort_dir=asc
+              - columnheader "Date Filed" [ref=e110]:
+                - link "Date Filed" [ref=e111] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=date_filed&sort_dir=asc
+              - columnheader "Hearing Date" [ref=e112]:
+                - link "Hearing Date" [ref=e113] [cursor=pointer]:
+                  - /url: http://cms.test/cases?sort_by=hearing_date&sort_dir=asc
+              - columnheader "Actions" [ref=e114]
+          - rowgroup [ref=e115]:
+            - row "CASE-2026-00653 AG/877/507/2018 — — CHISIZA Open MALAWI FINANCE COMPANY LTD ROADS AUTHORITY — Super Admin 2010-01-12 — View Edit" [ref=e116]:
+              - cell "CASE-2026-00653" [ref=e117]
+              - cell "AG/877/507/2018" [ref=e118]
+              - cell "—" [ref=e119]
+              - cell "—" [ref=e120]
+              - cell "CHISIZA" [ref=e121]
+              - cell "Open" [ref=e122]
+              - cell "MALAWI FINANCE COMPANY LTD" [ref=e123]
+              - cell "ROADS AUTHORITY" [ref=e124]
+              - cell "—" [ref=e125]
+              - cell "Super Admin" [ref=e126]
+              - cell "2010-01-12" [ref=e127]
+              - cell "—" [ref=e128]
+              - cell "View Edit" [ref=e129]:
+                - link "View" [ref=e130] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2724-738b-94bb-0b59c575eb83
+                - link "Edit" [ref=e131] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2724-738b-94bb-0b59c575eb83/edit
+            - row "CASE-2026-00652 AG/877/808/2021 — — K. PHIRI Open ECOBANK MALAWI LTD ATTORNEY GENERAL — Super Admin 2020-09-09 — View Edit" [ref=e132]:
+              - cell "CASE-2026-00652" [ref=e133]
+              - cell "AG/877/808/2021" [ref=e134]
+              - cell "—" [ref=e135]
+              - cell "—" [ref=e136]
+              - cell "K. PHIRI" [ref=e137]
+              - cell "Open" [ref=e138]
+              - cell "ECOBANK MALAWI LTD" [ref=e139]
+              - cell "ATTORNEY GENERAL" [ref=e140]
+              - cell "—" [ref=e141]
+              - cell "Super Admin" [ref=e142]
+              - cell "2020-09-09" [ref=e143]
+              - cell "—" [ref=e144]
+              - cell "View Edit" [ref=e145]:
+                - link "View" [ref=e146] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2721-7049-9298-a01fffc35c0f
+                - link "Edit" [ref=e147] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2721-7049-9298-a01fffc35c0f/edit
+            - row "CASE-2026-00651 AG/877/190/2016 — — K. PHIRI Open MZUNI UNIVERSITY ATTORNEY GENERAL — Super Admin 2010-06-11 — View Edit" [ref=e148]:
+              - cell "CASE-2026-00651" [ref=e149]
+              - cell "AG/877/190/2016" [ref=e150]
+              - cell "—" [ref=e151]
+              - cell "—" [ref=e152]
+              - cell "K. PHIRI" [ref=e153]
+              - cell "Open" [ref=e154]
+              - cell "MZUNI UNIVERSITY" [ref=e155]
+              - cell "ATTORNEY GENERAL" [ref=e156]
+              - cell "—" [ref=e157]
+              - cell "Super Admin" [ref=e158]
+              - cell "2010-06-11" [ref=e159]
+              - cell "—" [ref=e160]
+              - cell "View Edit" [ref=e161]:
+                - link "View" [ref=e162] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-271d-711d-98f4-5423f3d581f8
+                - link "Edit" [ref=e163] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-271d-711d-98f4-5423f3d581f8/edit
+            - row "CASE-2026-00650 AG/877/945/2024 — — Z. MWALE Open MR CHARLES KASAMBALA ROADS AUTHORITY — Super Admin 2012-05-08 — View Edit" [ref=e164]:
+              - cell "CASE-2026-00650" [ref=e165]
+              - cell "AG/877/945/2024" [ref=e166]
+              - cell "—" [ref=e167]
+              - cell "—" [ref=e168]
+              - cell "Z. MWALE" [ref=e169]
+              - cell "Open" [ref=e170]
+              - cell "MR CHARLES KASAMBALA" [ref=e171]
+              - cell "ROADS AUTHORITY" [ref=e172]
+              - cell "—" [ref=e173]
+              - cell "Super Admin" [ref=e174]
+              - cell "2012-05-08" [ref=e175]
+              - cell "—" [ref=e176]
+              - cell "View Edit" [ref=e177]:
+                - link "View" [ref=e178] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2719-7145-8a1a-d7a22a9b45e4
+                - link "Edit" [ref=e179] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2719-7145-8a1a-d7a22a9b45e4/edit
+            - row "CASE-2026-00649 AG/877/759/2015 — — Z. MWALE Open ECOBANK MALAWI LTD MALAWI HOUSING CORPORATION — Super Admin 2016-11-12 — View Edit" [ref=e180]:
+              - cell "CASE-2026-00649" [ref=e181]
+              - cell "AG/877/759/2015" [ref=e182]
+              - cell "—" [ref=e183]
+              - cell "—" [ref=e184]
+              - cell "Z. MWALE" [ref=e185]
+              - cell "Open" [ref=e186]
+              - cell "ECOBANK MALAWI LTD" [ref=e187]
+              - cell "MALAWI HOUSING CORPORATION" [ref=e188]
+              - cell "—" [ref=e189]
+              - cell "Super Admin" [ref=e190]
+              - cell "2016-11-12" [ref=e191]
+              - cell "—" [ref=e192]
+              - cell "View Edit" [ref=e193]:
+                - link "View" [ref=e194] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2716-70cd-9241-ae662291fbd7
+                - link "Edit" [ref=e195] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2716-70cd-9241-ae662291fbd7/edit
+            - row "CASE-2026-00648 AG/877/601/2022 — — A. KASAMBALA Open MZUNI UNIVERSITY — — Super Admin 2023-02-01 — View Edit" [ref=e196]:
+              - cell "CASE-2026-00648" [ref=e197]
+              - cell "AG/877/601/2022" [ref=e198]
+              - cell "—" [ref=e199]
+              - cell "—" [ref=e200]
+              - cell "A. KASAMBALA" [ref=e201]
+              - cell "Open" [ref=e202]
+              - cell "MZUNI UNIVERSITY" [ref=e203]
+              - cell "—" [ref=e204]
+              - cell "—" [ref=e205]
+              - cell "Super Admin" [ref=e206]
+              - cell "2023-02-01" [ref=e207]
+              - cell "—" [ref=e208]
+              - cell "View Edit" [ref=e209]:
+                - link "View" [ref=e210] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2712-7018-a28d-10263ea45098
+                - link "Edit" [ref=e211] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2712-7018-a28d-10263ea45098/edit
+            - row "CASE-2026-00647 AG/877/388/2025 — — M. BANDA Open ABC TRADING LIMITED — — Super Admin 2023-09-13 — View Edit" [ref=e212]:
+              - cell "CASE-2026-00647" [ref=e213]
+              - cell "AG/877/388/2025" [ref=e214]
+              - cell "—" [ref=e215]
+              - cell "—" [ref=e216]
+              - cell "M. BANDA" [ref=e217]
+              - cell "Open" [ref=e218]
+              - cell "ABC TRADING LIMITED" [ref=e219]
+              - cell "—" [ref=e220]
+              - cell "—" [ref=e221]
+              - cell "Super Admin" [ref=e222]
+              - cell "2023-09-13" [ref=e223]
+              - cell "—" [ref=e224]
+              - cell "View Edit" [ref=e225]:
+                - link "View" [ref=e226] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-270f-70a7-aa1a-f135d112522a
+                - link "Edit" [ref=e227] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-270f-70a7-aa1a-f135d112522a/edit
+            - row "CASE-2026-00646 AG/877/860/2015 — — M. BANDA Open ECOBANK MALAWI LTD MINISTRY OF AGRICULTURE — Super Admin 2024-10-14 — View Edit" [ref=e228]:
+              - cell "CASE-2026-00646" [ref=e229]
+              - cell "AG/877/860/2015" [ref=e230]
+              - cell "—" [ref=e231]
+              - cell "—" [ref=e232]
+              - cell "M. BANDA" [ref=e233]
+              - cell "Open" [ref=e234]
+              - cell "ECOBANK MALAWI LTD" [ref=e235]
+              - cell "MINISTRY OF AGRICULTURE" [ref=e236]
+              - cell "—" [ref=e237]
+              - cell "Super Admin" [ref=e238]
+              - cell "2024-10-14" [ref=e239]
+              - cell "—" [ref=e240]
+              - cell "View Edit" [ref=e241]:
+                - link "View" [ref=e242] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-270a-71cd-ad7f-a8170f96adc1
+                - link "Edit" [ref=e243] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-270a-71cd-ad7f-a8170f96adc1/edit
+            - row "CASE-2026-00645 AG/877/118/2022 — — I. JOSE Open MALAWI REVENUE AUTHORITY MINISTRY OF AGRICULTURE — Super Admin 2019-10-06 — View Edit" [ref=e244]:
+              - cell "CASE-2026-00645" [ref=e245]
+              - cell "AG/877/118/2022" [ref=e246]
+              - cell "—" [ref=e247]
+              - cell "—" [ref=e248]
+              - cell "I. JOSE" [ref=e249]
+              - cell "Open" [ref=e250]
+              - cell "MALAWI REVENUE AUTHORITY" [ref=e251]
+              - cell "MINISTRY OF AGRICULTURE" [ref=e252]
+              - cell "—" [ref=e253]
+              - cell "Super Admin" [ref=e254]
+              - cell "2019-10-06" [ref=e255]
+              - cell "—" [ref=e256]
+              - cell "View Edit" [ref=e257]:
+                - link "View" [ref=e258] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2707-7165-a625-558c13bd1648
+                - link "Edit" [ref=e259] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2707-7165-a625-558c13bd1648/edit
+            - row "CASE-2026-00644 AG/877/649/2020 — — K. PHIRI Open MALAWI FINANCE COMPANY LTD ATTORNEY GENERAL — Super Admin 2012-12-23 — View Edit" [ref=e260]:
+              - cell "CASE-2026-00644" [ref=e261]
+              - cell "AG/877/649/2020" [ref=e262]
+              - cell "—" [ref=e263]
+              - cell "—" [ref=e264]
+              - cell "K. PHIRI" [ref=e265]
+              - cell "Open" [ref=e266]
+              - cell "MALAWI FINANCE COMPANY LTD" [ref=e267]
+              - cell "ATTORNEY GENERAL" [ref=e268]
+              - cell "—" [ref=e269]
+              - cell "Super Admin" [ref=e270]
+              - cell "2012-12-23" [ref=e271]
+              - cell "—" [ref=e272]
+              - cell "View Edit" [ref=e273]:
+                - link "View" [ref=e274] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2703-706b-bf1c-31ef57f784a4
+                - link "Edit" [ref=e275] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2703-706b-bf1c-31ef57f784a4/edit
+            - row "CASE-2026-00643 AG/877/454/2017 — — K. PHIRI Open MALAWI REVENUE AUTHORITY ROADS AUTHORITY — Super Admin 2025-03-15 — View Edit" [ref=e276]:
+              - cell "CASE-2026-00643" [ref=e277]
+              - cell "AG/877/454/2017" [ref=e278]
+              - cell "—" [ref=e279]
+              - cell "—" [ref=e280]
+              - cell "K. PHIRI" [ref=e281]
+              - cell "Open" [ref=e282]
+              - cell "MALAWI REVENUE AUTHORITY" [ref=e283]
+              - cell "ROADS AUTHORITY" [ref=e284]
+              - cell "—" [ref=e285]
+              - cell "Super Admin" [ref=e286]
+              - cell "2025-03-15" [ref=e287]
+              - cell "—" [ref=e288]
+              - cell "View Edit" [ref=e289]:
+                - link "View" [ref=e290] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2700-73d3-a575-bc4b2d275035
+                - link "Edit" [ref=e291] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-2700-73d3-a575-bc4b2d275035/edit
+            - row "CASE-2026-00642 AG/877/222/2021 — — K. PHIRI Open MALAWI REVENUE AUTHORITY MALAWI HOUSING CORPORATION — Super Admin 2021-01-04 — View Edit" [ref=e292]:
+              - cell "CASE-2026-00642" [ref=e293]
+              - cell "AG/877/222/2021" [ref=e294]
+              - cell "—" [ref=e295]
+              - cell "—" [ref=e296]
+              - cell "K. PHIRI" [ref=e297]
+              - cell "Open" [ref=e298]
+              - cell "MALAWI REVENUE AUTHORITY" [ref=e299]
+              - cell "MALAWI HOUSING CORPORATION" [ref=e300]
+              - cell "—" [ref=e301]
+              - cell "Super Admin" [ref=e302]
+              - cell "2021-01-04" [ref=e303]
+              - cell "—" [ref=e304]
+              - cell "View Edit" [ref=e305]:
+                - link "View" [ref=e306] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26fc-71b4-8349-d298ac29bfa7
+                - link "Edit" [ref=e307] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26fc-71b4-8349-d298ac29bfa7/edit
+            - row "CASE-2026-00641 AG/877/880/2020 — — CHISIZA Open LILONGWE WATER BOARD — — Super Admin 2022-05-25 — View Edit" [ref=e308]:
+              - cell "CASE-2026-00641" [ref=e309]
+              - cell "AG/877/880/2020" [ref=e310]
+              - cell "—" [ref=e311]
+              - cell "—" [ref=e312]
+              - cell "CHISIZA" [ref=e313]
+              - cell "Open" [ref=e314]
+              - cell "LILONGWE WATER BOARD" [ref=e315]
+              - cell "—" [ref=e316]
+              - cell "—" [ref=e317]
+              - cell "Super Admin" [ref=e318]
+              - cell "2022-05-25" [ref=e319]
+              - cell "—" [ref=e320]
+              - cell "View Edit" [ref=e321]:
+                - link "View" [ref=e322] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26f8-7329-8ed3-1182572c38d8
+                - link "Edit" [ref=e323] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26f8-7329-8ed3-1182572c38d8/edit
+            - row "CASE-2026-00640 AG/877/333/2025 — — Z. MWALE Open LILONGWE WATER BOARD ATTORNEY GENERAL — Super Admin 2010-08-04 — View Edit" [ref=e324]:
+              - cell "CASE-2026-00640" [ref=e325]
+              - cell "AG/877/333/2025" [ref=e326]
+              - cell "—" [ref=e327]
+              - cell "—" [ref=e328]
+              - cell "Z. MWALE" [ref=e329]
+              - cell "Open" [ref=e330]
+              - cell "LILONGWE WATER BOARD" [ref=e331]
+              - cell "ATTORNEY GENERAL" [ref=e332]
+              - cell "—" [ref=e333]
+              - cell "Super Admin" [ref=e334]
+              - cell "2010-08-04" [ref=e335]
+              - cell "—" [ref=e336]
+              - cell "View Edit" [ref=e337]:
+                - link "View" [ref=e338] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26f4-71ac-9b12-0b43cb75f368
+                - link "Edit" [ref=e339] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26f4-71ac-9b12-0b43cb75f368/edit
+            - row "CASE-2026-00639 AG/877/497/2017 — — A. KASAMBALA Open MR CHARLES KASAMBALA MALAWI HOUSING CORPORATION — Super Admin 2024-04-25 — View Edit" [ref=e340]:
+              - cell "CASE-2026-00639" [ref=e341]
+              - cell "AG/877/497/2017" [ref=e342]
+              - cell "—" [ref=e343]
+              - cell "—" [ref=e344]
+              - cell "A. KASAMBALA" [ref=e345]
+              - cell "Open" [ref=e346]
+              - cell "MR CHARLES KASAMBALA" [ref=e347]
+              - cell "MALAWI HOUSING CORPORATION" [ref=e348]
+              - cell "—" [ref=e349]
+              - cell "Super Admin" [ref=e350]
+              - cell "2024-04-25" [ref=e351]
+              - cell "—" [ref=e352]
+              - cell "View Edit" [ref=e353]:
+                - link "View" [ref=e354] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26f1-7221-b1eb-8a3d92d1d17c
+                - link "Edit" [ref=e355] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d77b8-26f1-7221-b1eb-8a3d92d1d17c/edit
+        - generic [ref=e357]:
+          - generic [ref=e358]: Showing 1 to 15 of 653 results
+          - navigation [ref=e360]:
+            - generic [ref=e361]:
+              - paragraph [ref=e363]: Showing 1 to 15 of 653 results
+              - list [ref=e365]:
+                - listitem "« Previous" [ref=e366]:
+                  - generic: ‹
+                - listitem [ref=e367]:
+                  - generic [ref=e368]: "1"
+                - listitem [ref=e369]:
+                  - link "2" [ref=e370] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=2
+                - listitem [ref=e371]:
+                  - link "3" [ref=e372] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=3
+                - listitem [ref=e373]:
+                  - link "4" [ref=e374] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=4
+                - listitem [ref=e375]:
+                  - link "5" [ref=e376] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=5
+                - listitem [ref=e377]:
+                  - link "6" [ref=e378] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=6
+                - listitem [ref=e379]:
+                  - generic: ...
+                - listitem [ref=e380]:
+                  - link "43" [ref=e381] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=43
+                - listitem [ref=e382]:
+                  - link "44" [ref=e383] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=44
+                - listitem [ref=e384]:
+                  - link "Next »" [ref=e385] [cursor=pointer]:
+                    - /url: http://cms.test/cases?page=2
+                    - text: ›

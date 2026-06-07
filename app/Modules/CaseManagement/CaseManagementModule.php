@@ -46,6 +46,9 @@ class CaseManagementModule implements ModuleInterface
             $router->get('documents/recycle-bin', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'recycleBin'])->name('documents.recycle-bin');
             $router->delete('documents/recycle-bin/{document}', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'purge'])->name('documents.purge');
             $router->post('{case}/notes', [\App\Modules\CaseManagement\Controllers\CaseNoteController::class, 'store'])->name('notes.store');
+            $router->put('{case}/notes/{note}', [\App\Modules\CaseManagement\Controllers\CaseNoteController::class, 'update'])->name('notes.update');
+            $router->delete('{case}/notes/{note}', [\App\Modules\CaseManagement\Controllers\CaseNoteController::class, 'destroy'])->name('notes.destroy');
+            $router->delete('{case}', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'destroy'])->name('destroy');
             $router->get('{case}', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'show'])->name('show');
             $router->get('{case}/edit', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'edit'])->name('edit');
             $router->put('{case}', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'update'])->name('update');
@@ -58,8 +61,22 @@ class CaseManagementModule implements ModuleInterface
             'cases.view' => 'View cases',
             'cases.create' => 'Register new case',
             'cases.edit' => 'Edit case',
+            'cases.delete' => 'Delete case',
             'cases.assign' => 'Assign officer to case',
-            'cases.import' => 'Import cases from Excel',
+            'cases.notes.add' => 'Add case notes',
+            'cases.notes.edit' => 'Edit case notes',
+            'cases.notes.delete' => 'Delete case notes',
+            'cases.documents.upload' => 'Upload case documents',
+            'cases.documents.delete' => 'Delete case documents',
+            'cases.documents.restore' => 'Restore case documents',
+            'cases.documents.recycle_bin' => 'View document recycle bin',
+            'cases.documents.purge' => 'Permanently delete documents from recycle bin',
+            'cases.import.view' => 'View import center and import batches',
+            'cases.import.upload' => 'Upload single-file imports',
+            'cases.import.bulk' => 'Upload bulk imports',
+            'cases.import.execute' => 'Run dry-run and final import execution',
+            'cases.import.rollback' => 'Rollback imported batches',
+            'cases.import.reset' => 'Reset selected import batches',
             'reports.view' => 'View reports',
             'reports.export' => 'Export reports',
         ];
@@ -70,8 +87,8 @@ class CaseManagementModule implements ModuleInterface
         return [
             ['label' => 'Case List', 'route' => 'cases.index', 'permission' => 'cases.view', 'icon' => 'bi-list-ul'],
             ['label' => 'Reports', 'route' => 'cases.reports', 'permission' => 'reports.view', 'icon' => 'bi-bar-chart-line'],
-            ['label' => 'Excel Imports', 'route' => 'cases.imports.index', 'permission' => 'cases.import', 'icon' => 'bi-file-earmark-spreadsheet'],
-            ['label' => 'Recycle Bin', 'route' => 'cases.documents.recycle-bin', 'permission' => 'cases.view', 'icon' => 'bi-recycle'],
+            ['label' => 'Excel Imports', 'route' => 'cases.imports.index', 'permission' => 'cases.import.view', 'icon' => 'bi-file-earmark-spreadsheet'],
+            ['label' => 'Recycle Bin', 'route' => 'cases.documents.recycle-bin', 'permission' => 'cases.documents.recycle_bin', 'icon' => 'bi-recycle'],
         ];
     }
 }

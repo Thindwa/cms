@@ -2,7 +2,6 @@
 
 namespace App\Core\Dashboard;
 
-use App\Core\Audit\AuditLog;
 use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Models\CaseModel;
 use Illuminate\Contracts\View\View;
@@ -45,24 +44,13 @@ class DashboardController extends Controller
             ->limit(10)
             ->get(['id', 'case_number', 'title', 'hearing_date']);
 
-        $recentActivity = AuditLog::with('user')
-            ->orderByDesc('created_at')
-            ->limit(15)
-            ->get();
-
-        $caseNumbers = [];
-        $caseIds = $recentActivity->where('auditable_type', CaseModel::class)->pluck('auditable_id')->unique()->filter()->values();
-        if ($caseIds->isNotEmpty()) {
-            $caseNumbers = CaseModel::whereIn('id', $caseIds)->pluck('case_number', 'id')->toArray();
-        }
-
         $coverageLabels = array_keys($coverageData);
         $coverageValues = array_values($coverageData);
         $categoryLabels = array_keys($casesByCategory);
         $categoryValues = array_values($casesByCategory);
 
         return view('dashboard.index', compact(
-            'kpis', 'casesByCategory', 'recentActivity', 'caseNumbers', 'upcomingCases',
+            'kpis', 'casesByCategory', 'upcomingCases',
             'coverageLabels', 'coverageValues', 'categoryLabels', 'categoryValues'
         ));
     }

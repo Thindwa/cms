@@ -17,6 +17,7 @@ class CaseModel extends Model
 
     protected $fillable = [
         'case_number',
+        'case_title',
         'date_filed',
         'hearing_date',
         'reference_number',
@@ -27,6 +28,8 @@ class CaseModel extends Model
         'cause_number',
         'title',
         'description',
+        'status',
+        'priority',
         'assigned_to',
         'created_by',
         'updated_by',
@@ -37,6 +40,7 @@ class CaseModel extends Model
         return [
             'date_filed' => 'date',
             'hearing_date' => 'date',
+            'priority' => 'integer',
         ];
     }
 

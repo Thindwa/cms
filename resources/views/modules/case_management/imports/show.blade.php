@@ -19,6 +19,7 @@
 <div class="card mb-3">
     <div class="card-header">1) Resolve Mapping and Policies</div>
     <div class="card-body">
+        @can('execute', $batch)
         <form method="POST" action="{{ route('cases.imports.reanalyze', $batch) }}">
             @csrf
             @method('PUT')
@@ -96,6 +97,9 @@
 
             <button class="btn btn-primary">Re-analyze</button>
         </form>
+        @else
+            <p class="text-muted mb-0">You do not have permission to modify mapping/policies.</p>
+        @endcan
     </div>
 </div>
 
@@ -147,11 +151,14 @@
             $alreadyImported = $batch->status === 'imported' && !empty($batch->import_report);
         @endphp
 
-        <form method="POST" action="{{ route('cases.imports.dryRun', $batch) }}">
-            @csrf
-            <button class="btn btn-outline-primary">Run Dry-Run</button>
-        </form>
+        @can('execute', $batch)
+            <form method="POST" action="{{ route('cases.imports.dryRun', $batch) }}">
+                @csrf
+                <button class="btn btn-outline-primary">Run Dry-Run</button>
+            </form>
+        @endcan
 
+        @can('execute', $batch)
         @if(!$alreadyImported)
             <form method="POST" action="{{ route('cases.imports.execute', $batch) }}"
                   id="execute-import-form"
@@ -165,6 +172,9 @@
             <button class="btn btn-success" disabled>Already Imported</button>
         @endif
 
+        @endcan
+
+        @can('rollback', $batch)
         @if($alreadyImported && (($batch->import_report['rollback_meta'] ?? null) === null) && $hasRollbackPayload)
         <form method="POST" action="{{ route('cases.imports.rollback', $batch) }}"
               data-confirm-title="Rollback Import Batch"
@@ -174,6 +184,7 @@
             <button class="btn btn-outline-danger">Rollback Import</button>
         </form>
         @endif
+        @endcan
     </div>
     @if(!empty($batch->import_report) && (($batch->import_report['rollback_meta'] ?? null) === null) && !$hasRollbackPayload)
         <div class="card-footer text-muted small">

@@ -47,7 +47,9 @@
             </div>
         </div>
         <div class="card-footer bg-white">
-            <button type="submit" class="btn btn-primary">Update user</button>
+            @can('admin.users.edit')
+                <button type="submit" class="btn btn-primary">Update user</button>
+            @endcan
             <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
     </div>

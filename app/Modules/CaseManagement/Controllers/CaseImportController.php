@@ -24,7 +24,7 @@ class CaseImportController extends Controller
 
     public function index(): View
     {
-        $this->authorizeImport();
+        $this->authorize('viewAny', CaseImportBatch::class);
 
         $batches = CaseImportBatch::query()
             ->with('creator')
@@ -42,14 +42,14 @@ class CaseImportController extends Controller
 
     public function create(): View
     {
-        $this->authorizeImport();
+        $this->authorize('create', CaseImportBatch::class);
 
         return view('case_management::imports.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('create', CaseImportBatch::class);
 
         $validated = $request->validate([
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:51200'],
@@ -88,7 +88,7 @@ class CaseImportController extends Controller
 
     public function show(CaseImportBatch $import): View
     {
-        $this->authorizeImport();
+        $this->authorize('view', $import);
 
         $profile = $import->analysis['profile'] ?? [
             'sheet_names' => [$import->sheet_name],
@@ -110,7 +110,7 @@ class CaseImportController extends Controller
 
     public function reanalyze(Request $request, CaseImportBatch $import): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('execute', $import);
 
         $sheetNames = $import->analysis['profile']['sheet_names'] ?? [$import->sheet_name];
 
@@ -150,7 +150,7 @@ class CaseImportController extends Controller
 
     public function dryRun(CaseImportBatch $import): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('execute', $import);
 
         $fullPath = Storage::disk('local')->path($import->stored_file_path);
         $report = $this->importService->importConfigured(
@@ -173,7 +173,7 @@ class CaseImportController extends Controller
 
     public function execute(Request $request, CaseImportBatch $import): RedirectResponse|\Illuminate\Http\JsonResponse
     {
-        $this->authorizeImport();
+        $this->authorize('execute', $import);
 
         if ($import->status === 'imported' && ! empty($import->import_report)) {
             $message = 'This batch has already been imported. Use rollback first before importing again.';
@@ -223,7 +223,7 @@ class CaseImportController extends Controller
 
     public function rollback(CaseImportBatch $import): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('rollback', $import);
 
         $report = $import->import_report ?? [];
         $rollback = $report['rollback'] ?? null;
@@ -268,7 +268,7 @@ class CaseImportController extends Controller
 
     public function resetSelected(Request $request): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('reset', CaseImportBatch::class);
 
         $validated = $request->validate([
             'single_batch_ids' => ['nullable', 'array'],
@@ -405,11 +405,6 @@ class CaseImportController extends Controller
                 $summary['rolled_back_notes_removed'],
             )
         );
-    }
-
-    protected function authorizeImport(): void
-    {
-        abort_unless(auth()->user()?->can('cases.import'), 403);
     }
 
     protected function mappingFields(): array

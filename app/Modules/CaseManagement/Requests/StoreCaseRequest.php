@@ -14,6 +14,7 @@ class StoreCaseRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'case_title' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'date_filed' => ['nullable', 'date'],
             'hearing_date' => ['nullable', 'date'],
@@ -23,7 +24,18 @@ class StoreCaseRequest extends FormRequest
             'nature_of_claim' => ['nullable', 'string', 'max:255'],
             'claimant' => ['nullable', 'string', 'max:255'],
             'cause_number' => ['nullable', 'string', 'max:64'],
-            'description' => ['nullable', 'string'],
+            'status' => ['required', 'string', 'in:open,in_progress,closed'],
+            'priority' => ['required', 'integer', 'between:1,10'],
+            'description' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $plain = trim(strip_tags((string) $value));
+                    if ($plain !== '' && preg_match('/[^\pL\pN\s\.\,\-\(\)\/\:\;\&\'\"\?\!\%\+\#]/u', $plain)) {
+                        $fail('Invalid characters detected in the description.');
+                    }
+                },
+            ],
         ];
     }
 }

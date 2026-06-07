@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\User;
 use App\Core\Audit\AuditService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -38,21 +40,24 @@ class LoginController extends Controller
         $loginInput = trim($validated['username']);
         $password = $validated['password'];
 
-        $attempts = [
-            ['username' => $loginInput, 'password' => $password],
-        ];
-
-        // Support email-based login as well to reduce login friction.
+        $user = null;
         if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            $attempts[] = ['email' => $loginInput, 'password' => $password];
+            $user = User::query()
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower($loginInput)])
+                ->first();
+        } else {
+            $query = User::query();
+            if ($query->getConnection()->getDriverName() === 'mysql') {
+                $user = $query->whereRaw('BINARY username = ?', [$loginInput])->first();
+            } else {
+                // PostgreSQL/string compare is case-sensitive by default.
+                $user = $query->where('username', $loginInput)->first();
+            }
         }
 
-        $authenticated = false;
-        foreach ($attempts as $credentials) {
-            if (Auth::attempt($credentials, $remember)) {
-                $authenticated = true;
-                break;
-            }
+        $authenticated = $user !== null && Hash::check($password, $user->password);
+        if ($authenticated) {
+            Auth::login($user, $remember);
         }
 
         if (! $authenticated) {

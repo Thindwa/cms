@@ -1,0 +1,19 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Case Management System" [level=4] [ref=e5]
+    - paragraph [ref=e6]: Case Management System
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]: Username or Email
+      - textbox "Username or Email" [active] [ref=e10]:
+        - /placeholder: e.g. admin or admin@example.com
+        - text: admin
+    - generic [ref=e11]:
+      - generic [ref=e12]: Password
+      - textbox "Password" [ref=e13]: "1234"
+    - generic [ref=e14]:
+      - checkbox "Remember me" [ref=e15]
+      - generic [ref=e16]: Remember me
+    - button "Login" [ref=e17] [cursor=pointer]
+  - link "Forgot password?" [ref=e19] [cursor=pointer]:
+    - /url: http://cms.test/forgot-password

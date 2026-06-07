@@ -5,7 +5,7 @@
 @section('breadcrumbs', 'Case Management / ' . $case->case_number)
 
 @section('actions')
-    @can('cases.edit')
+    @can('update', $case)
         <a href="{{ route('cases.edit', $case) }}" class="btn btn-primary btn-sm">Edit</a>
     @endcan
 @endsection
@@ -45,7 +45,6 @@
     <li class="nav-item"><a class="nav-link {{ $activeTab === 'overview' ? 'active' : '' }}" data-bs-toggle="tab" href="#overview">Overview</a></li>
     <li class="nav-item"><a class="nav-link {{ $activeTab === 'documents' ? 'active' : '' }}" data-bs-toggle="tab" href="#documents">Documents</a></li>
     <li class="nav-item"><a class="nav-link {{ $activeTab === 'notes' ? 'active' : '' }}" data-bs-toggle="tab" href="#notes">Officer Notes / Comments (Updates)</a></li>
-    <li class="nav-item"><a class="nav-link {{ $activeTab === 'history' ? 'active' : '' }}" data-bs-toggle="tab" href="#history">History</a></li>
 </ul>
 
 <div class="tab-content">
@@ -57,6 +56,8 @@
                         <h6 class="mb-3">Case Details</h6>
                         <ul class="overview-list">
                             <li><span class="overview-label">Serial Number</span><span class="overview-value">{{ $case->case_number }}</span></li>
+                            <li><span class="overview-label">Case Title</span><span class="overview-value">{{ $case->case_title ?? '—' }}</span></li>
+                            <li><span class="overview-label">Status</span><span class="overview-value">{{ $case->status ? ucfirst(str_replace('_', ' ', $case->status)) : '—' }}</span></li>
                             <li><span class="overview-label">Date Filed</span><span class="overview-value">{{ $case->date_filed?->format('Y-m-d') ?? '—' }}</span></li>
                             <li><span class="overview-label">Upcoming Hearing Date</span><span class="overview-value">{{ $case->hearing_date?->format('Y-m-d') ?? '—' }}</span></li>
                             <li><span class="overview-label">AG Reference Number</span><span class="overview-value">{{ $case->reference_number ?? '—' }}</span></li>
@@ -93,7 +94,7 @@
         </div>
     </div>
     <div class="tab-pane fade {{ $activeTab === 'documents' ? 'show active' : '' }}" id="documents">
-        @can('cases.edit')
+        @can('uploadDocument', $case)
         <form action="{{ route('cases.documents.store', $case) }}" method="POST" enctype="multipart/form-data" class="mb-3">
             @csrf
             <div class="mb-2">
@@ -123,7 +124,7 @@
                         <td>{{ $doc->created_at->format('Y-m-d H:i') }}</td>
                         <td class="d-flex gap-1">
                             <a href="{{ route('cases.documents.download', [$case, $doc]) }}" class="btn btn-sm btn-outline-secondary">Download</a>
-                            @can('cases.edit')
+                            @can('deleteDocument', $case)
                             <form method="POST" action="{{ route('cases.documents.destroy', [$case, $doc->id]) }}"
                                   data-confirm-title="Delete Document"
                                   data-confirm-message="Move this document to recycle bin?"
@@ -140,44 +141,98 @@
                 @endforelse
             </tbody>
         </table>
-        <div class="mt-3">
-            <a href="{{ route('cases.documents.recycle-bin') }}" class="btn btn-sm btn-outline-secondary">
-                Open Recycle Bin
-            </a>
-        </div>
+        @can('viewAny', \App\Modules\CaseManagement\Models\CaseDocument::class)
+            <div class="mt-3">
+                <a href="{{ route('cases.documents.recycle-bin') }}" class="btn btn-sm btn-outline-secondary">
+                    Open Recycle Bin
+                </a>
+            </div>
+        @endcan
     </div>
     <div class="tab-pane fade {{ $activeTab === 'notes' ? 'show active' : '' }}" id="notes">
-        @can('cases.edit')
+        @can('createNote', $case)
         <form action="{{ route('cases.notes.store', $case) }}" method="POST" class="mb-3">
             @csrf
-            <textarea name="body" class="form-control form-control-sm mb-2" rows="2" placeholder="Add officer note or comment update..." required></textarea>
+            <textarea id="notes-editor" name="body" class="form-control form-control-sm mb-2 @error('body') is-invalid @enderror" rows="3" placeholder="Add officer note or comment update...">{{ old('body') }}</textarea>
+            @error('body')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             <button type="submit" class="btn btn-primary btn-sm">Add officer note</button>
         </form>
         @endcan
         @forelse($case->notes as $note)
             <div class="border-start border-2 ps-2 mb-2">
-                <small class="text-muted">{{ $note->user->name ?? '—' }} · {{ $note->created_at->format('Y-m-d H:i') }}</small>
-                <p class="mb-0 small">{{ $note->body }}</p>
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <small class="text-muted">{{ $note->user->name ?? '—' }} · {{ $note->created_at->format('Y-m-d H:i') }}</small>
+                    @if(auth()->user()?->can('updateNote', $case) || auth()->user()?->can('deleteNote', $case))
+                        <div class="d-flex gap-1">
+                            @can('updateNote', $case)
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-note-{{ $note->id }}">
+                                Edit
+                            </button>
+                            @endcan
+                            @can('deleteNote', $case)
+                            <form method="POST" action="{{ route('cases.notes.destroy', [$case, $note]) }}"
+                                  data-confirm-title="Delete Note"
+                                  data-confirm-message="Delete this note permanently?"
+                                  data-confirm-button="Delete Note">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                            @endcan
+                        </div>
+                    @endif
+                </div>
+                <div class="mb-0 small">{!! $note->body !!}</div>
+                @can('updateNote', $case)
+                    <div class="collapse mt-2" id="edit-note-{{ $note->id }}">
+                        <form method="POST" action="{{ route('cases.notes.update', [$case, $note]) }}">
+                            @csrf
+                            @method('PUT')
+                            <textarea id="edit-note-editor-{{ $note->id }}" name="edit_body" class="form-control form-control-sm js-note-editor @error('edit_body') is-invalid @enderror" rows="3">{!! old('edit_body', $note->body) !!}</textarea>
+                            @error('edit_body')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="d-flex gap-1 mt-2">
+                                <button type="submit" class="btn btn-sm btn-primary">Save changes</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#edit-note-{{ $note->id }}">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endcan
             </div>
         @empty
             <p class="text-muted small">No officer notes/comments yet.</p>
         @endforelse
     </div>
-    <div class="tab-pane fade {{ $activeTab === 'history' ? 'show active' : '' }}" id="history">
-        <table class="table table-sm">
-            <thead><tr><th>Date</th><th>User</th><th>Action</th></tr></thead>
-            <tbody>
-                @forelse($auditLogs as $log)
-                    <tr>
-                        <td>{{ $log->created_at->format('Y-m-d H:i:s') }}</td>
-                        <td>{{ $log->user?->name ?? $log->user_id ?? '—' }}</td>
-                        <td>{{ $log->action }}</td>
-                    </tr>
-                @empty
-                    <tr><td colspan="3" class="text-muted">No audit entries yet.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const noteEditors = document.querySelectorAll('#notes-editor, .js-note-editor');
+    if (!noteEditors.length) {
+        return;
+    }
+
+    tinymce.init({
+        selector: '#notes-editor, .js-note-editor',
+        height: 180,
+        menubar: false,
+        branding: false,
+        plugins: 'lists link code wordcount',
+        toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link | removeformat | code',
+        content_style: 'body { font-family: Segoe UI, Arial, sans-serif; font-size: 14px; }'
+    });
+
+    document.querySelectorAll('#notes form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            if (window.tinymce) {
+                window.tinymce.triggerSave();
+            }
+        });
+    });
+});
+</script>
+@endpush

@@ -22,14 +22,14 @@ class BulkCaseImportController extends Controller
 
     public function create(): View
     {
-        $this->authorizeImport();
+        $this->authorize('create', CaseImportBulkBatch::class);
 
         return view('case_management::imports.bulk.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('create', CaseImportBulkBatch::class);
 
         $validated = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
@@ -80,7 +80,7 @@ class BulkCaseImportController extends Controller
 
     public function show(CaseImportBulkBatch $bulk): View
     {
-        $this->authorizeImport();
+        $this->authorize('view', $bulk);
 
         $bulk->load(['creator']);
         $files = $bulk->files()->latest('created_at')->paginate(50);
@@ -103,7 +103,7 @@ class BulkCaseImportController extends Controller
 
     public function reanalyze(Request $request, CaseImportBulkBatch $bulk): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('execute', $bulk);
 
         $sheetNames = $bulk->analysis['profile']['sheet_names'] ?? [$bulk->sheet_name];
 
@@ -144,7 +144,7 @@ class BulkCaseImportController extends Controller
 
     public function start(CaseImportBulkBatch $bulk): RedirectResponse
     {
-        $this->authorizeImport();
+        $this->authorize('execute', $bulk);
 
         $analysis = $bulk->analysis['stats'] ?? [];
         if (($analysis['blocking_issues'] ?? 0) > 0) {
@@ -186,7 +186,7 @@ class BulkCaseImportController extends Controller
 
     public function progress(CaseImportBulkBatch $bulk): JsonResponse
     {
-        $this->authorizeImport();
+        $this->authorize('view', $bulk);
 
         $total = max(1, (int) $bulk->total_files);
         $processed = (int) $bulk->processed_files;
@@ -209,11 +209,6 @@ class BulkCaseImportController extends Controller
             'counts' => $counts,
             'done' => in_array($bulk->status, ['completed', 'completed_with_failures'], true),
         ]);
-    }
-
-    protected function authorizeImport(): void
-    {
-        abort_unless(auth()->user()?->can('cases.import'), 403);
     }
 
     protected function mappingFields(): array

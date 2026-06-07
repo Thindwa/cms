@@ -2,6 +2,7 @@
 
 namespace App\Modules\CaseManagement\Controllers;
 
+use App\Core\Audit\AuditService;
 use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Models\CaseModel;
 use App\Modules\CaseManagement\Requests\StoreCaseRequest;
@@ -14,7 +15,8 @@ use Illuminate\View\View;
 class CaseController extends Controller
 {
     public function __construct(
-        protected CaseManagementService $caseService
+        protected CaseManagementService $caseService,
+        protected AuditService $auditService,
     ) {
         $this->authorizeResource(CaseModel::class, 'case');
     }
@@ -28,6 +30,9 @@ class CaseController extends Controller
 
         if ($request->filled('case_number')) {
             $query->where('case_number', 'like', '%' . $request->case_number . '%');
+        }
+        if ($request->filled('case_title')) {
+            $query->where('case_title', 'like', '%' . $request->case_title . '%');
         }
         if ($request->filled('title')) {
             $query->where('title', 'like', '%' . $request->title . '%');
@@ -57,9 +62,33 @@ class CaseController extends Controller
             $query->whereDate('hearing_date', '<=', $request->hearing_date_to);
         }
 
+        $filterKeys = [
+            'case_number',
+            'case_title',
+            'title',
+            'reference_number',
+            'civil_case_number',
+            'party',
+            'date_from',
+            'date_to',
+            'hearing_date_from',
+            'hearing_date_to',
+        ];
+        $activeFilters = collect($filterKeys)
+            ->filter(fn (string $key) => $request->filled($key))
+            ->mapWithKeys(fn (string $key) => [$key => (string) $request->input($key)])
+            ->all();
+        if ($activeFilters !== []) {
+            $this->auditService->log(
+                action: 'case.search',
+                oldValues: null,
+                newValues: ['filters' => $activeFilters]
+            );
+        }
+
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $allowedSort = ['case_number', 'reference_number', 'civil_case_number', 'title', 'nature_of_claim', 'claimant', 'defendant', 'created_by', 'date_filed', 'hearing_date', 'created_at'];
+        $allowedSort = ['case_number', 'case_title', 'reference_number', 'civil_case_number', 'title', 'status', 'nature_of_claim', 'claimant', 'defendant', 'created_by', 'date_filed', 'hearing_date', 'created_at'];
         if (in_array($sortBy, $allowedSort, true)) {
             $query->orderBy($sortBy, $sortDir);
         } else {
@@ -85,13 +114,7 @@ class CaseController extends Controller
     public function show(CaseModel $case): View
     {
         $case->load(['createdByUser', 'documents.uploader', 'trashedDocuments.deletedByUser', 'notes.user']);
-        $auditLogs = \App\Core\Audit\AuditLog::where('auditable_type', CaseModel::class)
-            ->where('auditable_id', $case->id)
-            ->with('user')
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get();
-        return view('case_management::cases.show', compact('case', 'auditLogs'));
+        return view('case_management::cases.show', compact('case'));
     }
 
     public function edit(CaseModel $case): View
@@ -103,5 +126,23 @@ class CaseController extends Controller
     {
         $this->caseService->update($case, $request->validated());
         return redirect()->route('cases.show', $case)->with('success', 'Case updated successfully.');
+    }
+
+    public function destroy(CaseModel $case): RedirectResponse
+    {
+        $deletedCaseNumber = $case->case_number;
+        $old = $case->toArray();
+
+        $case->delete();
+
+        $this->auditService->log(
+            action: 'case.deleted',
+            auditableType: CaseModel::class,
+            auditableId: $case->id,
+            oldValues: $old,
+            newValues: ['deleted' => true, 'case_number' => $deletedCaseNumber]
+        );
+
+        return redirect()->route('cases.index')->with('success', "Case {$deletedCaseNumber} deleted.");
     }
 }

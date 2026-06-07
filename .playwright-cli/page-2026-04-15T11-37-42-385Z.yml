@@ -1,0 +1,151 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - link "Case Management System" [ref=e4] [cursor=pointer]:
+      - /url: http://cms.test/dashboard
+    - navigation [ref=e5]:
+      - list [ref=e6]:
+        - listitem [ref=e7]:
+          - link " Dashboard" [ref=e8] [cursor=pointer]:
+            - /url: http://cms.test/dashboard
+            - generic [ref=e9]: 
+            - generic [ref=e10]: Dashboard
+        - listitem [ref=e11]:
+          - generic [ref=e12]: Case Management
+          - link " Case List" [ref=e13] [cursor=pointer]:
+            - /url: http://cms.test/cases
+            - generic [ref=e14]: 
+            - generic [ref=e15]: Case List
+          - link " Reports" [ref=e16] [cursor=pointer]:
+            - /url: http://cms.test/cases/reports
+            - generic [ref=e17]: 
+            - generic [ref=e18]: Reports
+          - link " Excel Imports" [ref=e19] [cursor=pointer]:
+            - /url: http://cms.test/cases/imports
+            - generic [ref=e20]: 
+            - generic [ref=e21]: Excel Imports
+          - link " Recycle Bin" [ref=e22] [cursor=pointer]:
+            - /url: http://cms.test/cases/documents/recycle-bin
+            - generic [ref=e23]: 
+            - generic [ref=e24]: Recycle Bin
+        - listitem [ref=e25]:
+          - generic [ref=e26]: Administration
+          - link " Users" [ref=e27] [cursor=pointer]:
+            - /url: http://cms.test/admin/users
+            - generic [ref=e28]: 
+            - generic [ref=e29]: Users
+          - link " Roles & Permissions" [ref=e30] [cursor=pointer]:
+            - /url: http://cms.test/admin/roles
+            - generic [ref=e31]: 
+            - generic [ref=e32]: Roles & Permissions
+          - link " System Settings" [ref=e33] [cursor=pointer]:
+            - /url: http://cms.test/admin/settings
+            - generic [ref=e34]: 
+            - generic [ref=e35]: System Settings
+  - generic [ref=e36]:
+    - banner [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Case Management / Case List
+        - generic [ref=e40]:
+          - generic [ref=e41]: Super Admin
+          - button "Profile" [ref=e43] [cursor=pointer]
+    - main [ref=e44]:
+      - generic [ref=e45]:
+        - heading "Case Management" [level=1] [ref=e46]
+        - link "Register New Case" [ref=e48] [cursor=pointer]:
+          - /url: http://cms.test/cases/create
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: Case No
+          - textbox "Serial number" [ref=e54]
+        - generic [ref=e55]:
+          - generic [ref=e56]: AG Ref No
+          - textbox "AG/..." [ref=e57]
+        - generic [ref=e58]:
+          - generic [ref=e59]: Case Title
+          - textbox "Case title" [ref=e60]: PW QA Case Title
+        - generic [ref=e61]:
+          - generic [ref=e62]: Civil Case No
+          - textbox "Civil case no" [ref=e63]
+        - generic [ref=e64]:
+          - generic [ref=e65]: Officer Dealing
+          - textbox "Officer dealing" [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]: Party
+          - textbox "Claimant/Defendant" [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e71]: Date from
+          - textbox [ref=e72]
+        - generic [ref=e73]:
+          - generic [ref=e74]: Date to
+          - textbox [ref=e75]
+        - generic [ref=e76]:
+          - generic [ref=e77]: Hearing from
+          - textbox [ref=e78]
+        - generic [ref=e79]:
+          - generic [ref=e80]: Hearing to
+          - textbox [ref=e81]
+        - generic [ref=e82]:
+          - button "Search" [ref=e83] [cursor=pointer]
+          - link "Reset" [ref=e84] [cursor=pointer]:
+            - /url: http://cms.test/cases
+      - generic [ref=e85]:
+        - table [ref=e87]:
+          - rowgroup [ref=e88]:
+            - row "Serial No AG Ref No Case Title Civil Case No Officer Dealing Status Claimant Defendant Nature of Claim Entered By Date Filed Hearing Date Actions" [ref=e89]:
+              - columnheader "Serial No" [ref=e90]:
+                - link "Serial No" [ref=e91] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=case_number&sort_dir=asc
+              - columnheader "AG Ref No" [ref=e92]:
+                - link "AG Ref No" [ref=e93] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=reference_number&sort_dir=asc
+              - columnheader "Case Title" [ref=e94]:
+                - link "Case Title" [ref=e95] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=case_title&sort_dir=asc
+              - columnheader "Civil Case No" [ref=e96]:
+                - link "Civil Case No" [ref=e97] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=civil_case_number&sort_dir=asc
+              - columnheader "Officer Dealing" [ref=e98]:
+                - link "Officer Dealing" [ref=e99] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=title&sort_dir=asc
+              - columnheader "Status" [ref=e100]:
+                - link "Status" [ref=e101] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=status&sort_dir=asc
+              - columnheader "Claimant" [ref=e102]:
+                - link "Claimant" [ref=e103] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=claimant&sort_dir=asc
+              - columnheader "Defendant" [ref=e104]:
+                - link "Defendant" [ref=e105] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=defendant&sort_dir=asc
+              - columnheader "Nature of Claim" [ref=e106]:
+                - link "Nature of Claim" [ref=e107] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=nature_of_claim&sort_dir=asc
+              - columnheader "Entered By" [ref=e108]:
+                - link "Entered By" [ref=e109] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=created_by&sort_dir=asc
+              - columnheader "Date Filed" [ref=e110]:
+                - link "Date Filed" [ref=e111] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=date_filed&sort_dir=asc
+              - columnheader "Hearing Date" [ref=e112]:
+                - link "Hearing Date" [ref=e113] [cursor=pointer]:
+                  - /url: http://cms.test/cases?case_title=PW%20QA%20Case%20Title&sort_by=hearing_date&sort_dir=asc
+              - columnheader "Actions" [ref=e114]
+          - rowgroup [ref=e115]:
+            - row "CASE-2026-00654 — PW QA Case Title — QA OFFICER Closed QA Claimant — — Super Admin — — View Edit" [ref=e116]:
+              - cell "CASE-2026-00654" [ref=e117]
+              - cell "—" [ref=e118]
+              - cell "PW QA Case Title" [ref=e119]
+              - cell "—" [ref=e120]
+              - cell "QA OFFICER" [ref=e121]
+              - cell "Closed" [ref=e122]
+              - cell "QA Claimant" [ref=e123]
+              - cell "—" [ref=e124]
+              - cell "—" [ref=e125]
+              - cell "Super Admin" [ref=e126]
+              - cell "—" [ref=e127]
+              - cell "—" [ref=e128]
+              - cell "View Edit" [ref=e129]:
+                - link "View" [ref=e130] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d90e2-81ff-7035-b194-ffac6e8984d9
+                - link "Edit" [ref=e131] [cursor=pointer]:
+                  - /url: http://cms.test/cases/019d90e2-81ff-7035-b194-ffac6e8984d9/edit
+        - generic [ref=e134]: Showing 1 to 1 of 1 results

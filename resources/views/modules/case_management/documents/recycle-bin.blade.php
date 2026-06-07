@@ -43,20 +43,28 @@
                             <td>{{ $doc->deletedByUser?->name ?? '—' }}</td>
                             <td>{{ $doc->deleted_at?->format('Y-m-d H:i') ?? '—' }}</td>
                             <td class="text-end d-flex justify-content-end gap-1">
-                                <a href="{{ route('cases.show', $doc->case_id) }}" class="btn btn-sm btn-outline-secondary">Open Case</a>
-                                @can('cases.edit')
+                                @if($doc->case)
+                                @can('view', $doc->case)
+                                    <a href="{{ route('cases.show', $doc->case_id) }}" class="btn btn-sm btn-outline-secondary">Open Case</a>
+                                @endcan
+                                @endif
+                                @if($doc->case)
+                                @can('restoreDocument', $doc->case)
                                 <form method="POST" action="{{ route('cases.documents.restore', [$doc->case_id, $doc->id]) }}">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
                                 </form>
-                                <form method="POST" action="{{ route('cases.documents.purge', $doc->id) }}"
-                                      data-confirm-title="Delete Permanently"
-                                      data-confirm-message="Delete this file permanently? This cannot be undone."
-                                      data-confirm-button="Delete Permanently">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete Permanently</button>
-                                </form>
+                                @endcan
+                                @endif
+                                @can('purge', $doc)
+                                    <form method="POST" action="{{ route('cases.documents.purge', $doc->id) }}"
+                                          data-confirm-title="Delete Permanently"
+                                          data-confirm-message="Delete this file permanently? This cannot be undone."
+                                          data-confirm-button="Delete Permanently">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete Permanently</button>
+                                    </form>
                                 @endcan
                             </td>
                         </tr>

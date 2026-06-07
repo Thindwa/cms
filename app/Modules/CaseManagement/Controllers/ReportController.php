@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Models\CaseModel;
 use Barryvdh\DomPDF\Facade\Pdf as PdfFacade;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -20,11 +23,40 @@ class ReportController extends Controller
         $this->middleware('can:reports.view');
     }
 
-    public function index(Request $request): View|StreamedResponse|BinaryFileResponse
+    public function index(Request $request): View|StreamedResponse|BinaryFileResponse|RedirectResponse
     {
+        $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+        ]);
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $inputFrom = Carbon::parse((string) $request->input('date_from'))->startOfDay();
+            $inputTo = Carbon::parse((string) $request->input('date_to'))->startOfDay();
+            if ($inputFrom->gt($inputTo)) {
+                $query = $request->except(['date_from', 'date_to']);
+
+                return redirect()
+                    ->route('cases.reports', $query)
+                    ->withErrors(['date_to' => 'Invalid date range entered.']);
+            }
+        }
+
         $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : now()->startOfMonth();
         $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : now();
-        $allowedReportTypes = ['summary', 'by_officer', 'by_category', 'by_status', 'by_priority', 'aging', 'hearing_schedule'];
+        $allowedReportTypes = [
+            'summary',
+            'cases_per_officer',
+            'cases_registered',
+            'case_category_breakdown',
+            'case_status',
+            'by_officer',
+            'by_category',
+            'by_status',
+            'by_priority',
+            'aging',
+            'hearing_schedule',
+        ];
         $reportType = in_array($request->get('report_type', 'summary'), $allowedReportTypes, true)
             ? $request->get('report_type', 'summary')
             : 'summary';
@@ -66,9 +98,10 @@ class ReportController extends Controller
             ],
             'reportTypes' => [
                 'summary' => 'Executive Summary',
-                'by_officer' => 'Officer Workload',
-                'by_category' => 'Nature of Claim',
-                'by_status' => 'Case Status',
+                'cases_per_officer' => 'Cases Per Officer',
+                'cases_registered' => 'Cases Registered',
+                'case_category_breakdown' => 'Case Category Breakdown',
+                'case_status' => 'Case Status Report',
                 'by_priority' => 'Priority Distribution',
                 'aging' => 'Case Aging',
                 'hearing_schedule' => 'Hearing Schedule',
@@ -77,7 +110,7 @@ class ReportController extends Controller
             'priorityFilter' => $request->get('priority'),
             'officerFilter' => $request->get('officer_name'),
             'statusOptions' => CaseModel::query()->select('status')->distinct()->pluck('status')->filter()->sort()->values(),
-            'priorityOptions' => CaseModel::query()->select('priority')->distinct()->pluck('priority')->filter()->sort()->values(),
+            'priorityOptions' => collect(range(1, 10)),
             'officerOptions' => CaseModel::query()
                 ->select('title')
                 ->whereNotNull('title')
@@ -107,7 +140,7 @@ class ReportController extends Controller
             $query->where('status', $request->string('status')->toString());
         }
         if ($request->filled('priority')) {
-            $query->where('priority', $request->string('priority')->toString());
+            $query->where('priority', (int) $request->input('priority'));
         }
         if ($request->filled('officer_name')) {
             $query->where('title', $request->string('officer_name')->toString());
@@ -119,9 +152,10 @@ class ReportController extends Controller
     protected function buildReportData(string $reportType, Builder $query, Carbon $dateFrom, Carbon $dateTo): array
     {
         return match ($reportType) {
-            'by_officer' => $this->officerReportData($query),
-            'by_category' => $this->categoryReportData($query),
-            'by_status' => $this->statusReportData($query),
+            'cases_per_officer', 'by_officer' => $this->officerReportData($query),
+            'cases_registered' => $this->registeredCasesReportData($query),
+            'case_category_breakdown', 'by_category' => $this->categoryReportData($query),
+            'case_status', 'by_status' => $this->statusReportData($query),
             'by_priority' => $this->priorityReportData($query),
             'aging' => $this->agingReportData($query),
             'hearing_schedule' => $this->hearingScheduleReportData($query),
@@ -137,7 +171,7 @@ class ReportController extends Controller
         $withNotes = (clone $query)->has('notes')->count();
         $openCases = (clone $query)->where('status', '!=', 'closed')->count();
         $closedCases = (clone $query)->where('status', 'closed')->count();
-        $highPriority = (clone $query)->where('priority', 'high')->count();
+        $highPriority = (clone $query)->where('priority', '>=', 8)->count();
         $upcomingHearings = (clone $query)->whereBetween('hearing_date', [now()->toDateString(), now()->addDays(30)->toDateString()])->count();
 
         $rows = [
@@ -214,28 +248,53 @@ class ReportController extends Controller
             ->map(function (Collection $cases, string $officer) {
                 $upcoming = $cases->filter(fn (CaseModel $case) => $case->hearing_date && $case->hearing_date->between(now()->startOfDay(), now()->addDays(30)->endOfDay()))->count();
                 return [
-                    'Officer Dealing' => $officer,
-                    'Total' => $cases->count(),
+                    'Officer' => $officer,
+                    'Cases' => $cases->count(),
                     'Open' => $cases->where('status', '!=', 'closed')->count(),
                     'Closed' => $cases->where('status', 'closed')->count(),
-                    'High Priority' => $cases->where('priority', 'high')->count(),
+                    'High Priority' => $cases->where('priority', '>=', 8)->count(),
                     'Upcoming Hearings (30d)' => $upcoming,
                 ];
             })
-            ->sortByDesc('Total')
+            ->sortByDesc('Cases')
             ->values()
             ->toArray();
 
         return [
-            'title' => 'Officer Workload Report',
+            'title' => 'Report: Number of Cases Per Officer',
             'rows' => $rows,
             'charts' => [[
                 'id' => 'officerWorkload',
                 'title' => 'Cases per Officer',
                 'type' => 'bar',
-                'labels' => array_column($rows, 'Officer Dealing'),
-                'values' => array_column($rows, 'Total'),
+                'labels' => array_column($rows, 'Officer'),
+                'values' => array_column($rows, 'Cases'),
             ]],
+        ];
+    }
+
+    protected function registeredCasesReportData(Builder $query): array
+    {
+        $rows = (clone $query)
+            ->orderBy('created_at', 'desc')
+            ->limit(1000)
+            ->get()
+            ->map(function (CaseModel $case) {
+                return [
+                    'Case No' => $case->case_number,
+                    'Registered Date' => optional($case->created_at)->format('Y-m-d') ?? '—',
+                    'Date Filed' => optional($case->date_filed)->format('Y-m-d') ?? '—',
+                    'Officer' => $case->title ?: 'Unassigned',
+                    'Status' => $case->status ?: 'Unknown',
+                    'Priority' => $case->priority ?? '—',
+                ];
+            })
+            ->toArray();
+
+        return [
+            'title' => 'Report: Cases Registered',
+            'rows' => $rows,
+            'subtitle' => 'Filtered by selected date range and filters.',
         ];
     }
 
@@ -398,24 +457,41 @@ class ReportController extends Controller
 
     protected function exportExcel(string $title, array $rows, Carbon $dateFrom, Carbon $dateTo): StreamedResponse
     {
-        $filename = 'report-' . now()->format('Y-m-d-His') . '.csv';
+        $filename = 'report-' . now()->format('Y-m-d-His') . '.xlsx';
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         return response()->streamDownload(function () use ($title, $rows, $dateFrom, $dateTo) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, [$title]);
-            fputcsv($out, ['Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d')]);
-            fputcsv($out, []);
+            $sheet = new Spreadsheet();
+            $active = $sheet->getActiveSheet();
+            $active->setTitle('Report');
+            $active->setCellValue('A1', $title);
+            $active->setCellValue('A2', 'Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d'));
+            $rowIndex = 4;
+
             if (! empty($rows)) {
                 $first = reset($rows);
-                fputcsv($out, array_keys(is_array($first) ? $first : (array) $first));
+                $headersRow = array_keys(is_array($first) ? $first : (array) $first);
+                $column = 1;
+                foreach ($headersRow as $header) {
+                    $active->setCellValueByColumnAndRow($column, $rowIndex, (string) $header);
+                    $column++;
+                }
+                $rowIndex++;
+
                 foreach ($rows as $row) {
-                    fputcsv($out, is_array($row) ? $row : (array) $row);
+                    $column = 1;
+                    foreach ((is_array($row) ? $row : (array) $row) as $cell) {
+                        $active->setCellValueByColumnAndRow($column, $rowIndex, is_scalar($cell) || $cell === null ? (string) $cell : json_encode($cell));
+                        $column++;
+                    }
+                    $rowIndex++;
                 }
             }
-            fclose($out);
+
+            $writer = new Xlsx($sheet);
+            $writer->save('php://output');
         }, $filename, $headers);
     }
 }

@@ -29,6 +29,7 @@
 .activity-meta { font-size: 0.8rem; color: #6c757d; }
 .activity-action { font-weight: 500; color: #212529; }
 .chart-container { position: relative; height: 280px; }
+.quick-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem; }
 </style>
 @endpush
 
@@ -109,25 +110,28 @@
 </div>
 
 <div class="card chart-card shadow-sm">
-    <div class="card-header">Recent Activity</div>
-    <div class="card-body py-2">
-        @forelse($recentActivity ?? [] as $log)
-        <div class="activity-item">
-            <span class="activity-dot"></span>
-            <div class="flex-grow-1">
-                <div class="activity-action">{{ $log->action }}</div>
-                <div class="activity-meta">
-                    {{ $log->user?->name ?? 'System' }}
-                    @if(!empty($log->auditable_type) && isset($caseNumbers[$log->auditable_id]))
-                        · {{ $caseNumbers[$log->auditable_id] }}
-                    @endif
-                    · {{ $log->created_at->diffForHumans() }}
-                </div>
-            </div>
+    <div class="card-header">Quick Actions</div>
+    <div class="card-body">
+        <div class="quick-action-grid">
+            @can('cases.create')
+                <a href="{{ route('cases.create') }}" class="btn btn-outline-primary">Register New Case</a>
+            @endcan
+            @can('cases.view')
+                <a href="{{ route('cases.index') }}" class="btn btn-outline-secondary">Open Case List</a>
+            @endcan
+            @can('reports.view')
+                <a href="{{ route('cases.reports') }}" class="btn btn-outline-secondary">Generate Reports</a>
+            @endcan
+            @can('cases.import.view')
+                <a href="{{ route('cases.imports.index') }}" class="btn btn-outline-secondary">Excel Import Center</a>
+            @endcan
+            @can('cases.documents.recycle_bin')
+                <a href="{{ route('cases.documents.recycle-bin') }}" class="btn btn-outline-secondary">Open Recycle Bin</a>
+            @endcan
+            @can('admin.audit.view')
+                <a href="{{ route('admin.audit.index') }}" class="btn btn-outline-dark">View Audit Logs</a>
+            @endcan
         </div>
-        @empty
-        <p class="text-muted small mb-0 py-3">No recent activity.</p>
-        @endforelse
     </div>
 </div>
 @endsection

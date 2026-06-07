@@ -108,7 +108,9 @@
             <small class="text-muted">Reminders are sent to users with case access and email addresses configured.</small>
         </div>
         <div class="card-footer bg-white">
-            <button type="submit" class="btn btn-primary">Save settings</button>
+            @can('admin.settings.edit')
+                <button type="submit" class="btn btn-primary">Save settings</button>
+            @endcan
         </div>
     </div>
 </form>

@@ -27,7 +27,9 @@
             @endforeach
         </div>
         <div class="card-footer bg-white">
-            <button type="submit" class="btn btn-primary">Update permissions</button>
+            @can('admin.roles.edit')
+                <button type="submit" class="btn btn-primary">Update permissions</button>
+            @endcan
             <a href="{{ route('admin.roles.index') }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
     </div>

@@ -15,6 +15,11 @@
 @endpush
 
 @section('content')
+@if($errors->any())
+    <div class="alert alert-danger">
+        {{ $errors->first() }}
+    </div>
+@endif
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('cases.reports') }}" class="row g-2 align-items-end">
@@ -56,7 +61,7 @@
                 <select name="priority" class="form-select form-select-sm">
                     <option value="">All</option>
                     @foreach(($priorityOptions ?? []) as $priority)
-                        <option value="{{ $priority }}" @selected(($priorityFilter ?? '') === $priority)>{{ ucfirst($priority) }}</option>
+                        <option value="{{ $priority }}" @selected((string)($priorityFilter ?? '') === (string)$priority)>{{ $priority }}</option>
                     @endforeach
                 </select>
             </div>

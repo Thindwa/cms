@@ -13,7 +13,8 @@ class SettingsController extends Controller
     public function __construct(
         protected SettingsService $settings
     ) {
-        $this->middleware('can:admin.settings');
+        $this->middleware('can:admin.settings.view')->only(['index']);
+        $this->middleware('can:admin.settings.edit')->only(['update']);
     }
 
     public function index(): View

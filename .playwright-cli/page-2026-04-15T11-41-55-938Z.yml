@@ -1,0 +1,239 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e10]: Internal Server Error
+    - button "Copy as Markdown" [ref=e11] [cursor=pointer]:
+      - img [ref=e12]
+      - generic [ref=e15]: Copy as Markdown
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - heading "TypeError" [level=1] [ref=e20]
+      - generic [ref=e22]: app/Modules/CaseManagement/Controllers/ReportController.php:40
+      - paragraph [ref=e23]: "App\\Modules\\CaseManagement\\Controllers\\ReportController::index(): Return value must be of type Illuminate\\View\\View|Symfony\\Component\\HttpFoundation\\StreamedResponse|Symfony\\Component\\HttpFoundation\\BinaryFileResponse, Illuminate\\Http\\RedirectResponse returned"
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: LARAVEL
+          - generic [ref=e28]: 12.52.0
+        - generic [ref=e29]:
+          - generic [ref=e30]: PHP
+          - generic [ref=e31]: 8.3.30
+      - generic [ref=e32]:
+        - img [ref=e33]
+        - text: UNHANDLED
+      - generic [ref=e36]: CODE 0
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - img [ref=e40]
+        - text: "500"
+      - generic [ref=e43]:
+        - img [ref=e44]
+        - text: GET
+      - generic [ref=e47]: http://cms.test/cases/reports?date_basis=created_at&date_from=2026-04-15&date_to=2026-04-01&report_type=summary
+      - button [ref=e48] [cursor=pointer]:
+        - img [ref=e49]
+  - generic [ref=e53]:
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - img [ref=e57]
+        - heading "Exception trace" [level=3] [ref=e60]
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63] [cursor=pointer]:
+            - generic [ref=e66]:
+              - code [ref=e70]:
+                - generic [ref=e71]: App\Modules\CaseManagement\Controllers\ReportController->index(object(Illuminate\Http\Request))
+              - generic [ref=e73]: app/Modules/CaseManagement/Controllers/ReportController.php:40
+            - button [ref=e75]:
+              - img [ref=e76]
+          - code [ref=e84]:
+            - generic [ref=e85]: 35 $query['date_from'] = (string) $request->input('date_from');
+            - generic [ref=e86]: 36 $query['date_to'] = (string) $request->input('date_to');
+            - generic [ref=e87]: "37"
+            - generic [ref=e88]: 38 return redirect()
+            - generic [ref=e89]: 39 ->route('cases.reports', $query)
+            - generic [ref=e90]: 40 ->withErrors(['date_to' => 'Invalid date range entered.']);
+            - generic [ref=e91]: "41 }"
+            - generic [ref=e92]: "42 }"
+            - generic [ref=e93]: "43"
+            - generic [ref=e94]: "44 $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : now()->startOfMonth();"
+            - generic [ref=e95]: "45 $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : now();"
+            - generic [ref=e96]: 46 $allowedReportTypes = ['summary', 'by_officer', 'by_category', 'by_status', 'by_priority', 'aging', 'hearing_schedule'];
+            - generic [ref=e97]: 47 $reportType = in_array($request->get('report_type', 'summary'), $allowedReportTypes, true)
+            - generic [ref=e98]: 48 ? $request->get('report_type', 'summary')
+            - generic [ref=e99]: "49 : 'summary';"
+            - generic [ref=e100]: 50 $allowedDateBasis = ['created_at', 'date_filed', 'updated_at', 'hearing_date'];
+            - generic [ref=e101]: 51 $dateBasis = in_array($request->get('date_basis', 'created_at'), $allowedDateBasis, true)
+            - generic [ref=e102]: "52"
+        - generic [ref=e104] [cursor=pointer]:
+          - img [ref=e105]
+          - generic [ref=e109]: 52 vendor frames
+          - button [ref=e110]:
+            - img [ref=e111]
+        - generic [ref=e116] [cursor=pointer]:
+          - generic [ref=e119]:
+            - code [ref=e123]:
+              - generic [ref=e124]: Illuminate\Foundation\Application->handleRequest(object(Illuminate\Http\Request))
+            - generic [ref=e126]: public/index.php:20
+          - button [ref=e128]:
+            - img [ref=e129]
+        - generic [ref=e134] [cursor=pointer]:
+          - img [ref=e135]
+          - generic [ref=e139]: 1 vendor frame
+          - button [ref=e140]:
+            - img [ref=e141]
+    - generic [ref=e145]:
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - img [ref=e149]
+          - heading "Queries" [level=3] [ref=e151]
+        - generic [ref=e153]: 1-10 of 21
+      - generic [ref=e154]:
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - generic [ref=e157]:
+              - img [ref=e158]
+              - generic [ref=e160]: mysql
+            - code [ref=e164]:
+              - generic [ref=e165]: "select * from `cache` where `key` in ('case-management-system-cache-setting.mail_mailer')"
+          - generic [ref=e166]: 1.62ms
+        - generic [ref=e167]:
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - img [ref=e170]
+              - generic [ref=e172]: mysql
+            - code [ref=e176]:
+              - generic [ref=e177]: "select * from `cache` where `key` in ('case-management-system-cache-setting.smtp_host')"
+          - generic [ref=e178]: 0.27ms
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - generic [ref=e181]:
+              - img [ref=e182]
+              - generic [ref=e184]: mysql
+            - code [ref=e188]:
+              - generic [ref=e189]: "select * from `settings` where `settings`.`key` = 'smtp_host' limit 1"
+          - generic [ref=e190]: 0.6ms
+        - generic [ref=e191]:
+          - generic [ref=e192]:
+            - generic [ref=e193]:
+              - img [ref=e194]
+              - generic [ref=e196]: mysql
+            - code [ref=e200]:
+              - generic [ref=e201]: "insert into `cache` (`expiration`, `key`, `value`) values (1776256914, 'case-management-system-cache-setting.smtp_host', 'N;') on duplicate key update `expiration` = values(`expiration`), `key` = values(`key`), `value` = values(`value`)"
+          - generic [ref=e202]: 1.38ms
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - generic [ref=e205]:
+              - img [ref=e206]
+              - generic [ref=e208]: mysql
+            - code [ref=e212]:
+              - generic [ref=e213]: "select * from `cache` where `key` in ('case-management-system-cache-setting.smtp_port')"
+          - generic [ref=e214]: 0.48ms
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - generic [ref=e217]:
+              - img [ref=e218]
+              - generic [ref=e220]: mysql
+            - code [ref=e224]:
+              - generic [ref=e225]: "select * from `cache` where `key` in ('case-management-system-cache-setting.smtp_username')"
+          - generic [ref=e226]: 0.29ms
+        - generic [ref=e227]:
+          - generic [ref=e228]:
+            - generic [ref=e229]:
+              - img [ref=e230]
+              - generic [ref=e232]: mysql
+            - code [ref=e236]:
+              - generic [ref=e237]: "select * from `settings` where `settings`.`key` = 'smtp_username' limit 1"
+          - generic [ref=e238]: 0.27ms
+        - generic [ref=e239]:
+          - generic [ref=e240]:
+            - generic [ref=e241]:
+              - img [ref=e242]
+              - generic [ref=e244]: mysql
+            - code [ref=e248]:
+              - generic [ref=e249]: "insert into `cache` (`expiration`, `key`, `value`) values (1776256914, 'case-management-system-cache-setting.smtp_username', 'N;') on duplicate key update `expiration` = values(`expiration`), `key` = values(`key`), `value` = values(`value`)"
+          - generic [ref=e250]: 0.5ms
+        - generic [ref=e251]:
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - img [ref=e254]
+              - generic [ref=e256]: mysql
+            - code [ref=e260]:
+              - generic [ref=e261]: "select * from `cache` where `key` in ('case-management-system-cache-setting.smtp_password')"
+          - generic [ref=e262]: 0.3ms
+        - generic [ref=e263]:
+          - generic [ref=e264]:
+            - generic [ref=e265]:
+              - img [ref=e266]
+              - generic [ref=e268]: mysql
+            - code [ref=e272]:
+              - generic [ref=e273]: "select * from `settings` where `settings`.`key` = 'smtp_password' limit 1"
+          - generic [ref=e274]: 0.26ms
+      - generic [ref=e275]:
+        - button [disabled] [ref=e276]:
+          - img [ref=e277]
+        - button [disabled] [ref=e280]:
+          - img [ref=e281]
+        - button "1" [ref=e284] [cursor=pointer]
+        - button "2" [ref=e286] [cursor=pointer]
+        - button "3" [ref=e288] [cursor=pointer]
+        - button [ref=e289] [cursor=pointer]:
+          - img [ref=e290]
+        - button [ref=e292] [cursor=pointer]:
+          - img [ref=e293]
+  - generic [ref=e297]:
+    - generic [ref=e298]:
+      - heading "Headers" [level=2] [ref=e299]
+      - generic [ref=e300]:
+        - generic [ref=e301]:
+          - generic [ref=e302]: cookie
+          - generic [ref=e304]: XSRF-TOKEN=eyJpdiI6IjBZTW9nMVZXWDI4ODhIbGNWVjN3dGc9PSIsInZhbHVlIjoiQzJLeTBab0lRb1RpMmRORW4waXlkdVhUZmdLZ0ovcy9tSXBIQTFHNUdFb2RVUWlLUDR6SWtMVnVRclgzVmFiN1BIMlpBam9Wayt6VkU5L1psQWdzRUdxYXJUandPcGgrSWNHRVQ2YVRRMC9oYzVZcSthSzFya3Z6cjFOSXRFQ1QiLCJtYWMiOiI5NDY5MWM3MDEwNGU0NzdjMzBlNjY1YWQyMmZiOTY2OWQyNzFhNWE5NTIzZWJmNmRiYTBlMDcwNjc3YzQ0NTdjIiwidGFnIjoiIn0%3D; case-management-system-session=eyJpdiI6ImVzbkdZcXlPNnBXQldlTm5PUFIvU2c9PSIsInZhbHVlIjoiZWNtRnlRV2E3aXozZ1ZNQ0NaTmNsZHRDN3pBNUc1VlhEeUc0MVllVXNpbTZ6a1VOL1diUjFHRDFRVFk5dWJyT3RMamtUcHFIWHQ2cjZzalJ3OHMxemZsbEVaQjVMOWVTaEtVSUtaRmo3ZE92N1FkcHZEUThRWllNQVhVWlJQTWQiLCJtYWMiOiI4ZjgwMTE5NGZhNjMwNTE4ZWUxNmFiOWU4ZGMzY2RkOGU1OGQxMDNlMzIzMmY5YTMxZjJjNWE2MmYxODk1ODkxIiwidGFnIjoiIn0%3D
+        - generic [ref=e305]:
+          - generic [ref=e306]: accept-language
+          - generic [ref=e308]: en-US,en;q=0.9
+        - generic [ref=e309]:
+          - generic [ref=e310]: accept-encoding
+          - generic [ref=e312]: gzip, deflate
+        - generic [ref=e313]:
+          - generic [ref=e314]: accept
+          - generic [ref=e316]: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        - generic [ref=e317]:
+          - generic [ref=e318]: user-agent
+          - generic [ref=e320]: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+        - generic [ref=e321]:
+          - generic [ref=e322]: upgrade-insecure-requests
+          - generic [ref=e324]: "1"
+        - generic [ref=e325]:
+          - generic [ref=e326]: connection
+          - generic [ref=e328]: keep-alive
+        - generic [ref=e329]:
+          - generic [ref=e330]: host
+          - generic [ref=e332]: cms.test
+    - generic [ref=e333]:
+      - heading "Body" [level=2] [ref=e334]
+      - code [ref=e339]:
+        - generic [ref=e340]: "{"
+        - generic [ref=e341]: "\"report_type\": \"summary\","
+        - generic [ref=e342]: "\"date_from\": \"2026-04-15\","
+        - generic [ref=e343]: "\"date_to\": \"2026-04-01\","
+        - generic [ref=e344]: "\"date_basis\": \"created_at\""
+        - generic [ref=e345]: "}"
+    - generic [ref=e346]:
+      - heading "Routing" [level=2] [ref=e347]
+      - generic [ref=e348]:
+        - generic [ref=e349]:
+          - generic [ref=e350]: controller
+          - generic [ref=e352]: App\Modules\CaseManagement\Controllers\ReportController@index
+        - generic [ref=e353]:
+          - generic [ref=e354]: route name
+          - generic [ref=e356]: cases.reports
+        - generic [ref=e357]:
+          - generic [ref=e358]: middleware
+          - generic [ref=e360]: web, auth, can:reports.view
+    - generic [ref=e361]:
+      - heading "Routing parameters" [level=2] [ref=e362]
+      - generic [ref=e363]: // No routing parameters
+  - generic [ref=e366]:
+    - img [ref=e368]
+    - img [ref=e3406]

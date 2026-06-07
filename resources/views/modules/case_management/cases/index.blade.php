@@ -23,6 +23,10 @@
                 <input type="text" name="reference_number" class="form-control form-control-sm" value="{{ request('reference_number') }}" placeholder="AG/...">
             </div>
             <div class="col-md-2">
+                <label class="form-label small">Case Title</label>
+                <input type="text" name="case_title" class="form-control form-control-sm" value="{{ request('case_title') }}" placeholder="Case title">
+            </div>
+            <div class="col-md-2">
                 <label class="form-label small">Civil Case No</label>
                 <input type="text" name="civil_case_number" class="form-control form-control-sm" value="{{ request('civil_case_number') }}" placeholder="Civil case no">
             </div>
@@ -74,12 +78,9 @@
                     @endphp
                     <th>{!! $sortLink('case_number', 'Serial No') !!}</th>
                     <th>{!! $sortLink('reference_number', 'AG Ref No') !!}</th>
-                    <th>{!! $sortLink('civil_case_number', 'Civil Case No') !!}</th>
                     <th>{!! $sortLink('title', 'Officer Dealing') !!}</th>
-                    <th>{!! $sortLink('claimant', 'Claimant') !!}</th>
-                    <th>{!! $sortLink('defendant', 'Defendant') !!}</th>
-                    <th>{!! $sortLink('nature_of_claim', 'Nature of Claim') !!}</th>
-                    <th>{!! $sortLink('created_by', 'Entered By') !!}</th>
+                    <th>{!! $sortLink('status', 'Status') !!}</th>
+                    <th>{!! $sortLink('claimant', 'Claimant / Party') !!}</th>
                     <th>{!! $sortLink('date_filed', 'Date Filed') !!}</th>
                     <th>{!! $sortLink('hearing_date', 'Hearing Date') !!}</th>
                     <th class="text-end">Actions</th>
@@ -90,23 +91,38 @@
                     <tr>
                         <td>{{ $case->case_number }}</td>
                         <td>{{ $case->reference_number ?? '—' }}</td>
-                        <td>{{ $case->civil_case_number ?? '—' }}</td>
-                        <td>{{ Str::limit($case->title, 40) }}</td>
-                        <td>{{ $case->claimant ?? '—' }}</td>
-                        <td>{{ $case->defendant ?? '—' }}</td>
-                        <td>{{ $case->nature_of_claim ?? '—' }}</td>
-                        <td>{{ $case->createdByUser?->name ?? '—' }}</td>
+                        <td>{{ Str::limit($case->title, 28) ?: '—' }}</td>
+                        <td>
+                            @if($case->status)
+                                <span class="badge text-bg-light border">{{ ucfirst(str_replace('_', ' ', $case->status)) }}</span>
+                            @else
+                                —
+                            @endif
+                        </td>
+                        <td>{{ Str::limit($case->claimant ?: ($case->defendant ?? '—'), 40) }}</td>
                         <td>{{ $case->date_filed?->format('Y-m-d') ?? '—' }}</td>
                         <td>{{ $case->hearing_date?->format('Y-m-d') ?? '—' }}</td>
                         <td class="text-end">
-                            <a href="{{ route('cases.show', $case) }}" class="btn btn-sm btn-outline-primary">View</a>
-                            @can('cases.edit')
+                            @can('view', $case)
+                                <a href="{{ route('cases.show', $case) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            @endcan
+                            @can('update', $case)
                                 <a href="{{ route('cases.edit', $case) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            @endcan
+                            @can('delete', $case)
+                                <form method="POST" action="{{ route('cases.destroy', $case) }}" class="d-inline"
+                                      data-confirm-title="Delete Case"
+                                      data-confirm-message="Delete {{ $case->case_number }}? This removes it from case list."
+                                      data-confirm-button="Delete Case">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
                             @endcan
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="11" class="text-center text-muted py-4">No cases found.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">No cases found.</td></tr>
                 @endforelse
             </tbody>
         </table>

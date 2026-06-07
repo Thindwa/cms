@@ -13,7 +13,10 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:admin.users');
+        $this->middleware('can:admin.users.view')->only(['index']);
+        $this->middleware('can:admin.users.create')->only(['create', 'store']);
+        $this->middleware('can:admin.users.edit')->only(['edit', 'update']);
+        $this->middleware('can:admin.users.delete')->only(['destroy']);
     }
 
     public function index(Request $request): View
@@ -85,5 +88,16 @@ class UserController extends Controller
             $user->syncRoles($validated['roles'] ?? []);
         }
         return redirect()->route('admin.users.index')->with('success', 'User updated.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        if ((int) auth()->id() === (int) $user->id) {
+            return redirect()->route('admin.users.index')->with('error', 'You cannot delete your own account.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'User deleted.');
     }
 }

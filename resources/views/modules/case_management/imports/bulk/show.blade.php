@@ -31,6 +31,7 @@
 <div class="card mb-3">
     <div class="card-header">1) Mapping and Policies (Applied to all files)</div>
     <div class="card-body">
+        @can('execute', $batch)
         <form method="POST" action="{{ route('cases.imports.bulk.reanalyze', $batch) }}">
             @csrf
             @method('PUT')
@@ -103,6 +104,9 @@
             </div>
             <button class="btn btn-outline-primary">Re-analyze</button>
         </form>
+        @else
+            <p class="text-muted mb-0">You do not have permission to modify mapping/policies.</p>
+        @endcan
     </div>
 </div>
 
@@ -116,13 +120,15 @@
                 && !in_array($batch->status, ['processing', 'completed', 'rolled_back'], true)
                 && (($pendingCount + $failedCount) > 0);
         @endphp
-        <form method="POST" action="{{ route('cases.imports.bulk.start', $batch) }}"
-              data-confirm-title="Start Bulk Import"
-              data-confirm-message="Start processing this bulk import batch now?"
-              data-confirm-button="Start Import">
-            @csrf
-            <button class="btn btn-success" {{ $canStart ? '' : 'disabled' }}>Start Queue Processing</button>
-        </form>
+        @can('execute', $batch)
+            <form method="POST" action="{{ route('cases.imports.bulk.start', $batch) }}"
+                  data-confirm-title="Start Bulk Import"
+                  data-confirm-message="Start processing this bulk import batch now?"
+                  data-confirm-button="Start Import">
+                @csrf
+                <button class="btn btn-success" {{ $canStart ? '' : 'disabled' }}>Start Queue Processing</button>
+            </form>
+        @endcan
         <span class="small text-muted align-self-center">
             Blocking issues: {{ $analysis['stats']['blocking_issues'] ?? 0 }} |
             Pending: {{ $pendingCount }} |

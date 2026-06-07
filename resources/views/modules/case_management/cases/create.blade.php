@@ -17,6 +17,11 @@
                         <input type="text" class="form-control" value="{{ $caseNumber }}" readonly>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Case Title</label>
+                        <input type="text" name="case_title" class="form-control @error('case_title') is-invalid @enderror" value="{{ old('case_title') }}">
+                        @error('case_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Date Filed</label>
                         <input type="date" name="date_filed" class="form-control @error('date_filed') is-invalid @enderror" value="{{ old('date_filed') }}">
                         @error('date_filed')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -60,6 +65,27 @@
                         <label class="form-label">Officer Dealing <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" required>
                         @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                        <select name="status" class="form-select @error('status') is-invalid @enderror" required>
+                            <option value="open" @selected(old('status', 'open') === 'open')>Open</option>
+                            <option value="in_progress" @selected(old('status') === 'in_progress')>In Progress</option>
+                            <option value="closed" @selected(old('status') === 'closed')>Closed</option>
+                        </select>
+                        @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priority (1-10) <span class="text-danger">*</span></label>
+                        <input type="number"
+                               name="priority"
+                               min="1"
+                               max="10"
+                               step="1"
+                               class="form-control @error('priority') is-invalid @enderror"
+                               value="{{ old('priority', 5) }}"
+                               required>
+                        @error('priority')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Case Summary (Primary)</label>

@@ -6,15 +6,21 @@
 
 @section('actions')
     <div class="d-flex gap-2">
-        <button type="submit"
-                form="reset-selected-imports-form"
-                class="btn btn-outline-danger"
-                id="reset-selected-btn"
-                disabled>
-            Reset Selected Imports
-        </button>
-        <a href="{{ route('cases.imports.create') }}" class="btn btn-outline-primary">Single File Import</a>
-        <a href="{{ route('cases.imports.bulk.create') }}" class="btn btn-primary">Bulk Import</a>
+        @can('reset', \App\Modules\CaseManagement\Models\CaseImportBatch::class)
+            <button type="submit"
+                    form="reset-selected-imports-form"
+                    class="btn btn-outline-danger"
+                    id="reset-selected-btn"
+                    disabled>
+                Reset Selected Imports
+            </button>
+        @endcan
+        @can('create', \App\Modules\CaseManagement\Models\CaseImportBatch::class)
+            <a href="{{ route('cases.imports.create') }}" class="btn btn-outline-primary">Single File Import</a>
+        @endcan
+        @can('create', \App\Modules\CaseManagement\Models\CaseImportBulkBatch::class)
+            <a href="{{ route('cases.imports.bulk.create') }}" class="btn btn-primary">Bulk Import</a>
+        @endcan
     </div>
 @endsection
 
@@ -34,9 +40,7 @@
             <table class="table table-hover mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:40px;">
-                            <input type="checkbox" class="form-check-input" id="select-all-bulk">
-                        </th>
+                        <th style="width:40px;">@can('reset', \App\Modules\CaseManagement\Models\CaseImportBatch::class)<input type="checkbox" class="form-check-input" id="select-all-bulk">@endcan</th>
                         <th>Created</th>
                         <th>Name</th>
                         <th>Status</th>
@@ -49,14 +53,20 @@
                 @forelse(($bulkBatches ?? []) as $bulk)
                     <tr>
                         <td>
-                            <input type="checkbox" class="form-check-input import-select-bulk" name="bulk_batch_ids[]" value="{{ $bulk->id }}">
+                            @can('reset', \App\Modules\CaseManagement\Models\CaseImportBatch::class)
+                                <input type="checkbox" class="form-check-input import-select-bulk" name="bulk_batch_ids[]" value="{{ $bulk->id }}">
+                            @endcan
                         </td>
                         <td>{{ $bulk->created_at?->format('Y-m-d H:i') }}</td>
                         <td>{{ $bulk->name }}</td>
                         <td><span class="badge bg-secondary">{{ str_replace('_', ' ', $bulk->status) }}</span></td>
                         <td>{{ $bulk->processed_files }}/{{ $bulk->total_files }}</td>
                         <td>{{ $bulk->creator?->name ?? 'System' }}</td>
-                        <td class="text-end"><a href="{{ route('cases.imports.bulk.show', $bulk) }}" class="btn btn-sm btn-outline-primary">Open</a></td>
+                        <td class="text-end">
+                            @can('view', $bulk)
+                                <a href="{{ route('cases.imports.bulk.show', $bulk) }}" class="btn btn-sm btn-outline-primary">Open</a>
+                            @endcan
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="text-center py-4 text-muted">No bulk imports yet.</td></tr>
@@ -74,9 +84,7 @@
             <table class="table table-hover mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:40px;">
-                            <input type="checkbox" class="form-check-input" id="select-all-single">
-                        </th>
+                        <th style="width:40px;">@can('reset', \App\Modules\CaseManagement\Models\CaseImportBatch::class)<input type="checkbox" class="form-check-input" id="select-all-single">@endcan</th>
                         <th>Created</th>
                         <th>File</th>
                         <th>Sheet</th>
@@ -89,14 +97,20 @@
                 @forelse($batches as $batch)
                     <tr>
                         <td>
-                            <input type="checkbox" class="form-check-input import-select-single" name="single_batch_ids[]" value="{{ $batch->id }}">
+                            @can('reset', \App\Modules\CaseManagement\Models\CaseImportBatch::class)
+                                <input type="checkbox" class="form-check-input import-select-single" name="single_batch_ids[]" value="{{ $batch->id }}">
+                            @endcan
                         </td>
                         <td>{{ $batch->created_at?->format('Y-m-d H:i') }}</td>
                         <td>{{ $batch->source_file_name }}</td>
                         <td>{{ $batch->sheet_name }}</td>
                         <td><span class="badge bg-secondary">{{ str_replace('_', ' ', $batch->status) }}</span></td>
                         <td>{{ $batch->creator?->name ?? 'System' }}</td>
-                        <td class="text-end"><a href="{{ route('cases.imports.show', $batch) }}" class="btn btn-sm btn-outline-primary">Open</a></td>
+                        <td class="text-end">
+                            @can('view', $batch)
+                                <a href="{{ route('cases.imports.show', $batch) }}" class="btn btn-sm btn-outline-primary">Open</a>
+                            @endcan
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="text-center py-4 text-muted">No single-file imports yet.</td></tr>
@@ -123,6 +137,9 @@
 
     const allChecks = [...singleChecks, ...bulkChecks];
     const updateButton = () => {
+        if (!resetBtn) {
+            return;
+        }
         const selectedCount = allChecks.filter(c => c.checked).length;
         resetBtn.disabled = selectedCount === 0;
         resetBtn.textContent = selectedCount > 0

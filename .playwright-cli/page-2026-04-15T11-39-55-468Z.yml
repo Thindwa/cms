@@ -1,0 +1,120 @@
+- generic [ref=e1]:
+  - complementary [ref=e2]:
+    - link "Case Management System" [ref=e4] [cursor=pointer]:
+      - /url: http://cms.test/dashboard
+    - navigation [ref=e5]:
+      - list [ref=e6]:
+        - listitem [ref=e7]:
+          - link " Dashboard" [ref=e8] [cursor=pointer]:
+            - /url: http://cms.test/dashboard
+            - generic [ref=e9]: 
+            - generic [ref=e10]: Dashboard
+        - listitem [ref=e11]:
+          - generic [ref=e12]: Case Management
+          - link " Case List" [ref=e13] [cursor=pointer]:
+            - /url: http://cms.test/cases
+            - generic [ref=e14]: 
+            - generic [ref=e15]: Case List
+          - link " Reports" [ref=e16] [cursor=pointer]:
+            - /url: http://cms.test/cases/reports
+            - generic [ref=e17]: 
+            - generic [ref=e18]: Reports
+          - link " Excel Imports" [ref=e19] [cursor=pointer]:
+            - /url: http://cms.test/cases/imports
+            - generic [ref=e20]: 
+            - generic [ref=e21]: Excel Imports
+          - link " Recycle Bin" [ref=e22] [cursor=pointer]:
+            - /url: http://cms.test/cases/documents/recycle-bin
+            - generic [ref=e23]: 
+            - generic [ref=e24]: Recycle Bin
+        - listitem [ref=e25]:
+          - generic [ref=e26]: Administration
+          - link " Users" [ref=e27] [cursor=pointer]:
+            - /url: http://cms.test/admin/users
+            - generic [ref=e28]: 
+            - generic [ref=e29]: Users
+          - link " Roles & Permissions" [ref=e30] [cursor=pointer]:
+            - /url: http://cms.test/admin/roles
+            - generic [ref=e31]: 
+            - generic [ref=e32]: Roles & Permissions
+          - link " System Settings" [ref=e33] [cursor=pointer]:
+            - /url: http://cms.test/admin/settings
+            - generic [ref=e34]: 
+            - generic [ref=e35]: System Settings
+  - generic [ref=e36]:
+    - banner [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Case Management / CASE-2026-00654
+        - generic [ref=e40]:
+          - generic [ref=e41]: Super Admin
+          - button "Profile" [ref=e43] [cursor=pointer]
+    - main [ref=e44]:
+      - generic [ref=e45]:
+        - heading "Case CASE-2026-00654" [level=1] [ref=e46]
+        - link "Edit" [ref=e48] [cursor=pointer]:
+          - /url: http://cms.test/cases/019d90e2-81ff-7035-b194-ffac6e8984d9/edit
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - generic [ref=e52]: Case Overview
+          - heading "CASE-2026-00654" [level=4] [ref=e53]
+          - generic [ref=e54]: "Officer Dealing: QA OFFICER"
+        - generic [ref=e55]:
+          - generic [ref=e56]: "Created: 2026-04-15 11:24"
+          - generic [ref=e57]: "Updated: 2026-04-15 11:35"
+      - tablist [ref=e58]:
+        - tab "Overview" [ref=e59] [cursor=pointer]
+        - tab "Documents" [ref=e60] [cursor=pointer]
+        - tab "Officer Notes / Comments (Updates)" [ref=e61] [cursor=pointer]
+        - tab "History" [active] [selected] [ref=e62] [cursor=pointer]
+      - tabpanel [ref=e119]:
+        - table [ref=e120]:
+          - rowgroup [ref=e121]:
+            - row "Date User Action" [ref=e122]:
+              - columnheader "Date" [ref=e123]
+              - columnheader "User" [ref=e124]
+              - columnheader "Action" [ref=e125]
+          - rowgroup [ref=e126]:
+            - row "2026-04-15 11:39:31 Super Admin case.viewed" [ref=e127]:
+              - cell "2026-04-15 11:39:31" [ref=e128]
+              - cell "Super Admin" [ref=e129]
+              - cell "case.viewed" [ref=e130]
+            - row "2026-04-15 11:35:53 Super Admin case.updated" [ref=e131]:
+              - cell "2026-04-15 11:35:53" [ref=e132]
+              - cell "Super Admin" [ref=e133]
+              - cell "case.updated" [ref=e134]
+            - row "2026-04-15 11:35:53 Super Admin case.viewed" [ref=e135]:
+              - cell "2026-04-15 11:35:53" [ref=e136]
+              - cell "Super Admin" [ref=e137]
+              - cell "case.viewed" [ref=e138]
+            - row "2026-04-15 11:34:24 Super Admin case.viewed" [ref=e139]:
+              - cell "2026-04-15 11:34:24" [ref=e140]
+              - cell "Super Admin" [ref=e141]
+              - cell "case.viewed" [ref=e142]
+            - row "2026-04-15 11:34:24 Super Admin case.updated" [ref=e143]:
+              - cell "2026-04-15 11:34:24" [ref=e144]
+              - cell "Super Admin" [ref=e145]
+              - cell "case.updated" [ref=e146]
+            - row "2026-04-15 11:33:24 Super Admin case.viewed" [ref=e147]:
+              - cell "2026-04-15 11:33:24" [ref=e148]
+              - cell "Super Admin" [ref=e149]
+              - cell "case.viewed" [ref=e150]
+            - row "2026-04-15 11:31:34 Super Admin case.viewed" [ref=e151]:
+              - cell "2026-04-15 11:31:34" [ref=e152]
+              - cell "Super Admin" [ref=e153]
+              - cell "case.viewed" [ref=e154]
+            - row "2026-04-15 11:30:45 Super Admin case.viewed" [ref=e155]:
+              - cell "2026-04-15 11:30:45" [ref=e156]
+              - cell "Super Admin" [ref=e157]
+              - cell "case.viewed" [ref=e158]
+            - row "2026-04-15 11:28:11 Super Admin case.viewed" [ref=e159]:
+              - cell "2026-04-15 11:28:11" [ref=e160]
+              - cell "Super Admin" [ref=e161]
+              - cell "case.viewed" [ref=e162]
+            - row "2026-04-15 11:24:16 Super Admin case.viewed" [ref=e163]:
+              - cell "2026-04-15 11:24:16" [ref=e164]
+              - cell "Super Admin" [ref=e165]
+              - cell "case.viewed" [ref=e166]
+            - row "2026-04-15 11:24:16 Super Admin case.created" [ref=e167]:
+              - cell "2026-04-15 11:24:16" [ref=e168]
+              - cell "Super Admin" [ref=e169]
+              - cell "case.created" [ref=e170]

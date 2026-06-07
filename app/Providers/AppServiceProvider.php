@@ -3,7 +3,13 @@
 namespace App\Providers;
 
 use App\Core\Settings\SettingsService;
+use App\Modules\CaseManagement\Models\CaseDocument;
+use App\Modules\CaseManagement\Models\CaseImportBatch;
+use App\Modules\CaseManagement\Models\CaseImportBulkBatch;
 use App\Modules\CaseManagement\Models\CaseModel;
+use App\Modules\CaseManagement\Policies\CaseDocumentPolicy;
+use App\Modules\CaseManagement\Policies\CaseImportBatchPolicy;
+use App\Modules\CaseManagement\Policies\CaseImportBulkBatchPolicy;
 use App\Modules\CaseManagement\Policies\CasePolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Config;
@@ -25,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
         $this->applyMailSettings();
 
         Gate::policy(CaseModel::class, CasePolicy::class);
+        Gate::policy(CaseDocument::class, CaseDocumentPolicy::class);
+        Gate::policy(CaseImportBatch::class, CaseImportBatchPolicy::class);
+        Gate::policy(CaseImportBulkBatch::class, CaseImportBulkBatchPolicy::class);
 
         Route::bind('role', fn (string $value) => Role::findOrFail((int) $value));
     }

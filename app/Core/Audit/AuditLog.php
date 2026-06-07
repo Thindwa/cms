@@ -17,12 +17,24 @@ class AuditLog extends Model
         'id',
         'user_id',
         'action',
+        'module',
+        'level',
+        'outcome',
         'auditable_type',
         'auditable_id',
+        'request_id',
+        'session_id',
+        'route_name',
+        'method',
+        'url',
         'old_values',
         'new_values',
+        'tags',
+        'context',
         'ip_address',
         'user_agent',
+        'actor_name',
+        'actor_email',
     ];
 
     protected function casts(): array
@@ -30,6 +42,8 @@ class AuditLog extends Model
         return [
             'old_values' => 'array',
             'new_values' => 'array',
+            'tags' => 'array',
+            'context' => 'array',
         ];
     }
 
