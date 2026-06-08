@@ -22,6 +22,12 @@
 .overview-value { color: #101828; }
 .case-description { border: 1px solid #eaecf0; border-radius: 10px; background: #fcfcfd; padding: 1rem; max-height: 460px; overflow: auto; }
 .case-description p:last-child { margin-bottom: 0; }
+@media (max-width: 575.98px) {
+    .case-header-card .card-body { padding: 1rem; }
+    .case-header-card .text-end { text-align: left !important; }
+    .overview-list li { grid-template-columns: 1fr; gap: .15rem; }
+    .case-description { padding: .875rem; }
+}
 </style>
 @endpush
 
@@ -110,37 +116,39 @@
             <small class="text-muted">PDF, Word, Excel, images. You can select multiple files. Max 10MB each.</small>
         </form>
         @endcan
-        <table class="table table-sm">
-            <thead><tr><th>File name</th><th>Title</th><th>Details</th><th>Version</th><th>Type</th><th>Uploaded by</th><th>Date</th><th></th></tr></thead>
-            <tbody>
-                @forelse($case->documents->sortBy(['original_name', 'version']) as $doc)
-                    <tr>
-                        <td>{{ $doc->original_name }}</td>
-                        <td>{{ $doc->title ?? '—' }}</td>
-                        <td>{{ Str::limit($doc->details ?? '—', 80) }}</td>
-                        <td>v{{ $doc->version }}</td>
-                        <td>{{ $doc->display_type }}</td>
-                        <td>{{ $doc->uploader?->name ?? '—' }}</td>
-                        <td>{{ $doc->created_at->format('Y-m-d H:i') }}</td>
-                        <td class="d-flex gap-1">
-                            <a href="{{ route('cases.documents.download', [$case, $doc]) }}" class="btn btn-sm btn-outline-secondary">Download</a>
-                            @can('deleteDocument', $case)
-                            <form method="POST" action="{{ route('cases.documents.destroy', [$case, $doc->id]) }}"
-                                  data-confirm-title="Delete Document"
-                                  data-confirm-message="Move this document to recycle bin?"
-                                  data-confirm-button="Move to Recycle Bin">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                            </form>
-                            @endcan
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="8" class="text-muted">No documents yet.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead><tr><th>File name</th><th>Title</th><th>Details</th><th>Version</th><th>Type</th><th>Uploaded by</th><th>Date</th><th></th></tr></thead>
+                <tbody>
+                    @forelse($case->documents->sortBy(['original_name', 'version']) as $doc)
+                        <tr>
+                            <td>{{ $doc->original_name }}</td>
+                            <td>{{ $doc->title ?? '—' }}</td>
+                            <td>{{ Str::limit($doc->details ?? '—', 80) }}</td>
+                            <td>v{{ $doc->version }}</td>
+                            <td>{{ $doc->display_type }}</td>
+                            <td>{{ $doc->uploader?->name ?? '—' }}</td>
+                            <td>{{ $doc->created_at->format('Y-m-d H:i') }}</td>
+                            <td class="d-flex gap-1 flex-wrap">
+                                <a href="{{ route('cases.documents.download', [$case, $doc]) }}" class="btn btn-sm btn-outline-secondary">Download</a>
+                                @can('deleteDocument', $case)
+                                <form method="POST" action="{{ route('cases.documents.destroy', [$case, $doc->id]) }}"
+                                      data-confirm-title="Delete Document"
+                                      data-confirm-message="Move this document to recycle bin?"
+                                      data-confirm-button="Move to Recycle Bin">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                                @endcan
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="8" class="text-muted">No documents yet.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
         @can('viewAny', \App\Modules\CaseManagement\Models\CaseDocument::class)
             <div class="mt-3">
                 <a href="{{ route('cases.documents.recycle-bin') }}" class="btn btn-sm btn-outline-secondary">

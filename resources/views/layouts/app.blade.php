@@ -8,10 +8,23 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
-        #sidebar nav { padding: .5rem .5rem .75rem .5rem; }
-        #sidebar .nav-item { margin-bottom: .15rem; }
-        #sidebar .nav-item.mt-2 { margin-top: .85rem !important; }
-        #sidebar .nav-link { border-radius: .45rem; }
+        html, body { overflow-x: hidden; }
+        body { background: #f8f9fb; }
+        .app-shell { min-height: 100vh; }
+        .app-sidebar {
+            width: 260px;
+            min-height: 100vh;
+        }
+        .app-main {
+            min-width: 0;
+        }
+        .app-topbar {
+            min-height: 64px;
+        }
+        .sidebar-menu { padding: .5rem .5rem .75rem .5rem; }
+        .sidebar-menu .nav-item { margin-bottom: .15rem; }
+        .sidebar-menu .nav-item.mt-2 { margin-top: .85rem !important; }
+        .sidebar-menu .nav-link { border-radius: .45rem; }
         .sidebar-link {
             display: flex !important;
             align-items: center;
@@ -24,77 +37,79 @@
             text-align: center;
             opacity: .9;
         }
-        #sidebar .text-uppercase { padding-left: .75rem; letter-spacing: .04em; }
+        .sidebar-menu .text-uppercase { padding-left: .75rem; letter-spacing: .04em; }
+        .offcanvas.app-offcanvas {
+            width: 290px;
+            max-width: 88vw;
+            background: #212529;
+            color: #fff;
+        }
+        .offcanvas.app-offcanvas .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        .app-content {
+            padding: 1.5rem;
+        }
+        @media (max-width: 991.98px) {
+            .app-content {
+                padding: 1rem;
+            }
+            .app-topbar {
+                min-height: auto;
+            }
+            .app-topbar .app-topbar-inner {
+                gap: .75rem;
+            }
+            .app-topbar .app-topbar-meta {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+        @media (max-width: 575.98px) {
+            .app-content {
+                padding: .875rem;
+            }
+            .sidebar-link {
+                font-size: .98rem;
+            }
+            .sidebar-link i {
+                width: 1rem;
+            }
+        }
     </style>
     @stack('styles')
 </head>
-<body class="d-flex">
-    {{-- Sidebar --}}
-    <aside class="bg-dark text-white flex-shrink-0" id="sidebar" style="width: 260px; min-height: 100vh;">
+<body class="app-shell d-flex flex-column flex-lg-row">
+    {{-- Desktop Sidebar --}}
+    <aside class="bg-dark text-white flex-shrink-0 app-sidebar d-none d-lg-flex flex-column position-sticky top-0" id="sidebar">
         <div class="p-3 border-bottom border-secondary">
             <a href="{{ route('dashboard') }}" class="text-white text-decoration-none fw-bold">{{ config('app.name') }}</a>
         </div>
-        <nav class="p-2">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link text-white sidebar-link {{ request()->routeIs('dashboard') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route('dashboard') }}">
-                        <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
-                    </a>
-                </li>
-                @php $registry = app(\App\Core\Support\ModuleRegistry::class); @endphp
-                @foreach($registry->allMenuItems() as $group)
-                    @if(count($group['children'] ?? []) > 0)
-                        <li class="nav-item mt-2">
-                            <span class="nav-link text-secondary small text-uppercase">{{ $group['label'] }}</span>
-                            @foreach($group['children'] as $item)
-                                @if(empty($item['permission']) || auth()->user()->can($item['permission']))
-                                    @php
-                                        $routePattern = str_ends_with($item['route'], '.index') ? str_replace('.index', '.*', $item['route']) : null;
-                                        $active = request()->routeIs($item['route']) || ($routePattern && request()->routeIs($routePattern));
-                                    @endphp
-                                    <a class="nav-link text-white d-block small sidebar-link {{ $active ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ route($item['route']) }}">
-                                        <i class="bi {{ $item['icon'] ?? 'bi-dot' }}"></i><span>{{ $item['label'] }}</span>
-                                    </a>
-                                @endif
-                            @endforeach
-                        </li>
-                    @endif
-                @endforeach
-                @if(auth()->user()->can('admin.users.view') || auth()->user()->can('admin.roles.view') || auth()->user()->can('admin.settings.view') || auth()->user()->can('admin.audit.view'))
-                <li class="nav-item mt-2">
-                    <span class="nav-link text-secondary small text-uppercase">Administration</span>
-                    @can('admin.users.view')
-                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.users.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.users.index') ? route('admin.users.index') : '#' }}">
-                            <i class="bi bi-people"></i><span>Users</span>
-                        </a>
-                    @endcan
-                    @can('admin.roles.view')
-                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.roles.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.roles.index') ? route('admin.roles.index') : '#' }}">
-                            <i class="bi bi-shield-lock"></i><span>Roles & Permissions</span>
-                        </a>
-                    @endcan
-                    @can('admin.settings.view')
-                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.settings.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.settings.index') ? route('admin.settings.index') : '#' }}">
-                            <i class="bi bi-gear"></i><span>System Settings</span>
-                        </a>
-                    @endcan
-                    @can('admin.audit.view')
-                        <a class="nav-link text-white d-block small sidebar-link {{ request()->routeIs('admin.audit.*') ? 'bg-secondary bg-opacity-25' : '' }}" href="{{ Route::has('admin.audit.index') ? route('admin.audit.index') : '#' }}">
-                            <i class="bi bi-journal-text"></i><span>Audit Logs</span>
-                        </a>
-                    @endcan
-                </li>
-                @endif
-            </ul>
-        </nav>
+        @include('layouts.partials.sidebar-menu')
     </aside>
 
-    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+    {{-- Mobile Sidebar --}}
+    <div class="offcanvas offcanvas-start app-offcanvas d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title fw-bold" id="mobileSidebarLabel">{{ config('app.name') }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            @include('layouts.partials.sidebar-menu')
+        </div>
+    </div>
+
+    <div class="app-main flex-grow-1 d-flex flex-column min-vh-100">
         {{-- Top navbar --}}
-        <header class="bg-white border-bottom shadow-sm">
-            <div class="d-flex align-items-center justify-content-between px-3 py-2">
-                <span class="text-muted small">@yield('breadcrumbs', 'Dashboard')</span>
-                <div class="d-flex align-items-center gap-2">
+        <header class="bg-white border-bottom shadow-sm app-topbar">
+            <div class="d-flex align-items-center justify-content-between px-3 py-2 app-topbar-inner">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button class="btn btn-outline-secondary btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <span class="text-muted small text-break">@yield('breadcrumbs', 'Dashboard')</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap app-topbar-meta">
                     <span class="text-muted small">{{ auth()->user()->name ?? auth()->user()->username }}</span>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Profile</button>
@@ -114,7 +129,7 @@
             </div>
         </header>
 
-        <main class="p-4 flex-grow-1">
+        <main class="app-content flex-grow-1">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h1 class="h4 mb-0">@yield('page-title', 'Dashboard')</h1>
                 @hasSection('actions')

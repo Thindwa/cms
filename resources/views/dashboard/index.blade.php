@@ -30,6 +30,17 @@
 .activity-action { font-weight: 500; color: #212529; }
 .chart-container { position: relative; height: 280px; }
 .quick-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem; }
+@media (max-width: 991.98px) {
+    .dashboard-card .card-body { padding: 1rem 1.1rem; }
+    .dashboard-card .stat-value { font-size: 1.5rem; }
+    .chart-container { height: 240px; }
+}
+@media (max-width: 575.98px) {
+    .dashboard-card .card-body { padding: .9rem 1rem; }
+    .chart-card .card-header { padding: .85rem 1rem; }
+    .chart-container { height: 220px; }
+    .quick-action-grid { grid-template-columns: 1fr; }
+}
 </style>
 @endpush
 
@@ -147,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const coverageColors = ['#198754', '#fd7e14', '#6c757d'];
     const categoryPalette = ['#0d6efd', '#198754', '#fd7e14', '#6f42c1', '#20c997', '#dc3545', '#ffc107', '#6c757d'];
+    const isMobile = window.matchMedia('(max-width: 991.98px)').matches;
 
     if (document.getElementById('chartCoverage') && coverageLabels.length) {
         new Chart(document.getElementById('chartCoverage'), {
@@ -188,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'right' } },
+                plugins: { legend: { position: isMobile ? 'bottom' : 'right' } },
                 cutout: '60%'
             }
         });
