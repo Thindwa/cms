@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class CaseDocumentService
 {
-    protected string $disk = 'local';
+    protected string $disk = 'public';
     protected string $path = 'case-documents';
 
     public function upload(CaseModel $case, UploadedFile $file, ?string $title = null, ?string $details = null): CaseDocument

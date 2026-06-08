@@ -50,7 +50,7 @@ class CaseDocumentController extends Controller
         if (! $this->documentService->exists($document)) {
             return redirect()->route('cases.show', $case)->with('error', 'File not found.');
         }
-        $path = \Illuminate\Support\Facades\Storage::disk('local')->path($document->file_path);
+        $path = $this->documentService->getStoragePath($document);
         return response()->streamDownload(
             fn () => print(file_get_contents($path)),
             $document->original_name,
