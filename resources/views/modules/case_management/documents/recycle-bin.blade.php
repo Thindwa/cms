@@ -41,7 +41,7 @@
                             <td>{{ $doc->case?->case_number ?? '—' }}</td>
                             <td>{{ $doc->case?->title ?? '—' }}</td>
                             <td>{{ $doc->deletedByUser?->name ?? '—' }}</td>
-                            <td>{{ $doc->deleted_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                            <td>{{ $doc->deleted_at?->formatDateTime() ?? '—' }}</td>
                             <td class="text-end d-flex justify-content-end gap-1">
                                 @if($doc->case)
                                 @can('view', $doc->case)

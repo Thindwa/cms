@@ -19,8 +19,7 @@ return new class extends Migration
             $table->string('cause_number')->nullable();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('status', 32)->default('open');
-            $table->string('priority', 32)->default('medium');
+            $table->string('status', 32)->default('active');
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

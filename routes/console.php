@@ -61,7 +61,6 @@ Artisan::command('cases:import-excel {file} {--sheet=Sheet1} {--user=} {--dry-ru
         ['Cases created', $result['cases_created']],
         ['Cases matched', $result['cases_matched']],
         ['Cases updated', $result['cases_updated']],
-        ['Notes created', $result['notes_created']],
         ['Errors', count($result['errors'])],
     ]);
 
@@ -93,3 +92,18 @@ Schedule::command('cases:notify-upcoming-hearings')
     ->everyMinute()
     ->withoutOverlapping()
     ->name('cases-notify-upcoming-hearings');
+
+Schedule::command('cases:check-dormant')
+    ->dailyAt('00:00')
+    ->withoutOverlapping()
+    ->name('cases-check-dormant');
+
+Schedule::command('audit:purge --days=365')
+    ->dailyAt('02:00')
+    ->withoutOverlapping()
+    ->name('audit-purge');
+
+Schedule::command('documents:purge-expired')
+    ->dailyAt('03:00')
+    ->withoutOverlapping()
+    ->name('documents-purge-expired');

@@ -4,6 +4,8 @@ namespace App\Modules\CaseManagement\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Imports\ExcelCaseImportService;
+use App\Modules\CaseManagement\Models\CaseActivity;
+use App\Modules\CaseManagement\Models\CaseDocument;
 use App\Modules\CaseManagement\Models\CaseImportBatch;
 use App\Modules\CaseManagement\Models\CaseImportBulkBatch;
 use App\Modules\CaseManagement\Models\CaseImportBulkFile;
@@ -28,11 +30,13 @@ class CaseImportController extends Controller
 
         $batches = CaseImportBatch::query()
             ->with('creator')
+            ->select(['id', 'source_file_name', 'sheet_name', 'status', 'created_at', 'created_by'])
             ->latest('created_at')
-            ->paginate(20);
+            ->paginate((int) config('app.items_per_page', 20));
 
         $bulkBatches = CaseImportBulkBatch::query()
             ->with('creator')
+            ->select(['id', 'name', 'status', 'processed_files', 'total_files', 'created_at', 'created_by'])
             ->latest('created_at')
             ->limit(20)
             ->get();
@@ -234,27 +238,24 @@ class CaseImportController extends Controller
 
         $createdCaseIds = array_values(array_filter($rollback['created_case_ids'] ?? []));
         $updatedCases = array_values($rollback['updated_cases'] ?? []);
-        $createdNoteIds = array_values(array_filter($rollback['created_note_ids'] ?? []));
 
-        if ($createdCaseIds === [] && $updatedCases === [] && $createdNoteIds === []) {
+        if ($createdCaseIds === [] && $updatedCases === []) {
             return redirect()->route('cases.imports.show', $import)
                 ->with('error', 'Nothing to rollback for this batch.');
         }
 
-        DB::transaction(function () use ($createdCaseIds, $updatedCases, $createdNoteIds): void {
-            $this->applyRollbackPayload([
+        $result = DB::transaction(function () use ($createdCaseIds, $updatedCases): array {
+            return $this->applyRollbackPayload([
                 'created_case_ids' => $createdCaseIds,
                 'updated_cases' => $updatedCases,
-                'created_note_ids' => $createdNoteIds,
             ]);
         });
 
         $report['rollback_meta'] = [
             'rolled_back_at' => now()->toDateTimeString(),
             'rolled_back_by' => auth()->id(),
-            'created_cases_removed' => count($createdCaseIds),
-            'updated_cases_restored' => count($updatedCases),
-            'notes_removed' => count($createdNoteIds),
+            'created_cases_removed' => $result['cases_removed'],
+            'updated_cases_restored' => $result['cases_restored'],
         ];
 
         $import->update([
@@ -284,7 +285,10 @@ class CaseImportController extends Controller
                 ->with('error', 'Select at least one import batch to reset.');
         }
 
-        $singleBatchesForGuard = CaseImportBatch::query()->whereIn('id', $singleIds)->get();
+        $singleBatchesForGuard = CaseImportBatch::query()
+            ->select(['id', 'status', 'import_report', 'source_file_name'])
+            ->whereIn('id', $singleIds)
+            ->get();
         $notRolledBack = $singleBatchesForGuard->filter(function (CaseImportBatch $batch): bool {
             return $batch->status === 'imported' && empty($batch->import_report['rollback_meta']);
         });
@@ -297,6 +301,7 @@ class CaseImportController extends Controller
         }
 
         $bulkBatchesForGuard = CaseImportBulkBatch::query()
+            ->select(['id', 'status', 'name'])
             ->with('files')
             ->whereIn('id', $bulkIds)
             ->get();
@@ -339,15 +344,13 @@ class CaseImportController extends Controller
             'bulk_batches' => 0,
             'rolled_back_cases_removed' => 0,
             'rolled_back_cases_restored' => 0,
-            'rolled_back_notes_removed' => 0,
         ];
         $pathsToDelete = [];
 
         DB::transaction(function () use (&$summary, &$pathsToDelete, $singleIds, $bulkIds): void {
             $singleBatches = CaseImportBatch::query()
+                ->select(['id', 'stored_file_path', 'import_report'])
                 ->whereIn('id', $singleIds)
-                ->orderByDesc('executed_at')
-                ->orderByDesc('created_at')
                 ->get();
 
             foreach ($singleBatches as $batch) {
@@ -358,19 +361,20 @@ class CaseImportController extends Controller
                     $result = $this->applyRollbackPayload($rollback);
                     $summary['rolled_back_cases_removed'] += $result['cases_removed'];
                     $summary['rolled_back_cases_restored'] += $result['cases_restored'];
-                    $summary['rolled_back_notes_removed'] += $result['notes_removed'];
                 }
             }
 
-            $bulkBatches = CaseImportBulkBatch::query()->whereIn('id', $bulkIds)->get();
+            $bulkBatches = CaseImportBulkBatch::query()
+                ->select(['id'])
+                ->whereIn('id', $bulkIds)
+                ->get();
             foreach ($bulkBatches as $bulk) {
                 $summary['bulk_batches']++;
             }
 
             $bulkFiles = CaseImportBulkFile::query()
+                ->select(['id', 'bulk_batch_id', 'stored_file_path', 'report'])
                 ->whereIn('bulk_batch_id', $bulkIds)
-                ->orderByDesc('completed_at')
-                ->orderByDesc('created_at')
                 ->get();
 
             foreach ($bulkFiles as $bulkFile) {
@@ -380,7 +384,6 @@ class CaseImportController extends Controller
                     $result = $this->applyRollbackPayload($rollback);
                     $summary['rolled_back_cases_removed'] += $result['cases_removed'];
                     $summary['rolled_back_cases_restored'] += $result['cases_restored'];
-                    $summary['rolled_back_notes_removed'] += $result['notes_removed'];
                 }
             }
 
@@ -397,12 +400,11 @@ class CaseImportController extends Controller
         return redirect()->route('cases.imports.index')->with(
             'success',
             sprintf(
-                'Selected import reset completed. Cleared %d single batches, %d bulk batches. Rolled back: %d cases removed, %d cases restored, %d notes removed.',
+                'Selected import reset completed. Cleared %d single batches, %d bulk batches. Rolled back: %d cases removed, %d cases restored.',
                 $summary['single_batches'],
                 $summary['bulk_batches'],
                 $summary['rolled_back_cases_removed'],
                 $summary['rolled_back_cases_restored'],
-                $summary['rolled_back_notes_removed'],
             )
         );
     }
@@ -414,28 +416,22 @@ class CaseImportController extends Controller
             'claimant' => 'Claimant / Plaintiff',
             'reference_number' => 'Reference Number',
             'cause_number' => 'Cause Number',
-            'civil_case_number' => 'Civil Case Number',
             'description' => 'Description / Latest Issue',
             'officer_dealing' => 'Officer Dealing Source',
             'entered_by_legacy' => 'Entered By (Legacy)',
             'defendant' => 'Defendant / Respondent',
             'hearing_date' => 'Hearing Date',
+            'status' => 'Status',
         ];
     }
 
     /**
-     * @return array{cases_removed:int,cases_restored:int,notes_removed:int}
+     * @return array{cases_removed:int,cases_restored:int}
      */
     protected function applyRollbackPayload(array $rollback): array
     {
         $createdCaseIds = array_values(array_filter($rollback['created_case_ids'] ?? []));
         $updatedCases = array_values($rollback['updated_cases'] ?? []);
-        $createdNoteIds = array_values(array_filter($rollback['created_note_ids'] ?? []));
-
-        $notesRemoved = 0;
-        if ($createdNoteIds !== []) {
-            $notesRemoved = CaseNote::query()->whereIn('id', $createdNoteIds)->delete();
-        }
 
         $casesRestored = 0;
         foreach ($updatedCases as $entry) {
@@ -456,17 +452,19 @@ class CaseImportController extends Controller
 
         $casesRemoved = 0;
         if ($createdCaseIds !== []) {
-            $cases = CaseModel::withTrashed()->whereIn('id', $createdCaseIds)->get();
-            foreach ($cases as $case) {
-                $case->forceDelete();
-                $casesRemoved++;
-            }
+            // Explicitly delete related records first to avoid any Eloquent/SoftDeletes
+            // interference with DB-level cascading foreign keys.
+            CaseActivity::query()->whereIn('case_id', $createdCaseIds)->delete();
+            CaseNote::query()->whereIn('case_id', $createdCaseIds)->delete();
+            CaseDocument::query()->whereIn('case_id', $createdCaseIds)->forceDelete();
+
+            // Bypass Eloquent SoftDeletes to hard-delete in a single query.
+            $casesRemoved = DB::table('cases')->whereIn('id', $createdCaseIds)->delete();
         }
 
         return [
             'cases_removed' => $casesRemoved,
             'cases_restored' => $casesRestored,
-            'notes_removed' => $notesRemoved,
         ];
     }
 }

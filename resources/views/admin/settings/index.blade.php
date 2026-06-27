@@ -87,6 +87,83 @@
     </div>
 
     <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white">Case Management</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Dormant years</label>
+                <input type="number" name="dormant_years" class="form-control @error('dormant_years') is-invalid @enderror" min="1" max="50" value="{{ old('dormant_years', $settings['dormant_years'] ?? 3) }}">
+                @error('dormant_years')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <small class="text-muted">Cases with no document upload activity for this many years are automatically marked as dormant.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white">Quarterly Report Configuration</div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Set the starting month for each quarter of your financial/fiscal year. Quarters are contiguous and cycle through all 12 months.</p>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Q1 starts in month</label>
+                    <select name="q1_start_month" class="form-select @error('q1_start_month') is-invalid @enderror">
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" @selected((int) old('q1_start_month', $settings['q1_start_month'] ?? 1) === $m)>{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
+                        @endforeach
+                    </select>
+                    @error('q1_start_month')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Q2 starts in month</label>
+                    <select name="q2_start_month" class="form-select @error('q2_start_month') is-invalid @enderror">
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" @selected((int) old('q2_start_month', $settings['q2_start_month'] ?? 4) === $m)>{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
+                        @endforeach
+                    </select>
+                    @error('q2_start_month')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Q3 starts in month</label>
+                    <select name="q3_start_month" class="form-select @error('q3_start_month') is-invalid @enderror">
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" @selected((int) old('q3_start_month', $settings['q3_start_month'] ?? 7) === $m)>{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
+                        @endforeach
+                    </select>
+                    @error('q3_start_month')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Q4 starts in month</label>
+                    <select name="q4_start_month" class="form-select @error('q4_start_month') is-invalid @enderror">
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" @selected((int) old('q4_start_month', $settings['q4_start_month'] ?? 10) === $m)>{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
+                        @endforeach
+                    </select>
+                    @error('q4_start_month')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white">Document Retention (Recycle Bin)</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Retention days</label>
+                    <input type="number" name="document_retention_days" class="form-control @error('document_retention_days') is-invalid @enderror" min="1" max="3650" value="{{ old('document_retention_days', $settings['document_retention_days'] ?? 90) }}">
+                    @error('document_retention_days')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <small class="text-muted">Soft-deleted documents are permanently removed after this many days.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Reminder days before deletion</label>
+                    <input type="number" name="document_reminder_days" class="form-control @error('document_reminder_days') is-invalid @enderror" min="1" max="365" value="{{ old('document_reminder_days', $settings['document_reminder_days'] ?? 10) }}">
+                    @error('document_reminder_days')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <small class="text-muted">A reminder notification is sent this many days before documents are auto-deleted.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-white">Upcoming Hearing Notifications</div>
         <div class="card-body">
             <div class="form-check form-switch mb-3">

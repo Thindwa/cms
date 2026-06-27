@@ -57,7 +57,7 @@
                                 <input type="checkbox" class="form-check-input import-select-bulk" name="bulk_batch_ids[]" value="{{ $bulk->id }}">
                             @endcan
                         </td>
-                        <td>{{ $bulk->created_at?->format('Y-m-d H:i') }}</td>
+                        <td>{{ $bulk->created_at?->formatDateTime() }}</td>
                         <td>{{ $bulk->name }}</td>
                         <td><span class="badge bg-secondary">{{ str_replace('_', ' ', $bulk->status) }}</span></td>
                         <td>{{ $bulk->processed_files }}/{{ $bulk->total_files }}</td>
@@ -101,7 +101,7 @@
                                 <input type="checkbox" class="form-check-input import-select-single" name="single_batch_ids[]" value="{{ $batch->id }}">
                             @endcan
                         </td>
-                        <td>{{ $batch->created_at?->format('Y-m-d H:i') }}</td>
+                        <td>{{ $batch->created_at?->formatDateTime() }}</td>
                         <td>{{ $batch->source_file_name }}</td>
                         <td>{{ $batch->sheet_name }}</td>
                         <td><span class="badge bg-secondary">{{ str_replace('_', ' ', $batch->status) }}</span></td>

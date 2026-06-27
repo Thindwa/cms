@@ -83,7 +83,10 @@ class BulkCaseImportController extends Controller
         $this->authorize('view', $bulk);
 
         $bulk->load(['creator']);
-        $files = $bulk->files()->latest('created_at')->paginate(50);
+        $files = $bulk->files()
+            ->select(['id', 'bulk_batch_id', 'source_file_name', 'status', 'error_message', 'created_at'])
+            ->latest('created_at')
+            ->paginate((int) config('app.items_per_page', 50));
 
         $profile = $bulk->analysis['profile'] ?? [
             'sheet_names' => [$bulk->sheet_name],
@@ -119,7 +122,10 @@ class BulkCaseImportController extends Controller
             'options.text_policy' => ['required', Rule::in(['clean', 'raw'])],
         ]);
 
-        $firstFile = $bulk->files()->oldest('created_at')->first();
+        $firstFile = $bulk->files()
+            ->select(['id', 'stored_file_path'])
+            ->oldest('created_at')
+            ->first();
         if (! $firstFile) {
             return redirect()->route('cases.imports.bulk.show', $bulk)->with('error', 'No files found in this batch.');
         }
@@ -175,7 +181,10 @@ class BulkCaseImportController extends Controller
             'completed_at' => null,
         ]);
 
-        $files = $bulk->files()->whereIn('status', ['pending', 'failed'])->get();
+        $files = $bulk->files()
+            ->select(['id', 'bulk_batch_id', 'source_file_name', 'stored_file_path', 'status'])
+            ->whereIn('status', ['pending', 'failed'])
+            ->get();
         foreach ($files as $file) {
             dispatch(new ProcessBulkCaseImportFileJob($bulk->id, $file->id));
         }
@@ -218,12 +227,12 @@ class BulkCaseImportController extends Controller
             'claimant' => 'Claimant / Plaintiff',
             'reference_number' => 'Reference Number',
             'cause_number' => 'Cause Number',
-            'civil_case_number' => 'Civil Case Number',
             'description' => 'Description / Latest Issue',
             'officer_dealing' => 'Officer Dealing Source',
             'entered_by_legacy' => 'Entered By (Legacy)',
             'defendant' => 'Defendant / Respondent',
             'hearing_date' => 'Hearing Date',
+            'status' => 'Status',
         ];
     }
 }

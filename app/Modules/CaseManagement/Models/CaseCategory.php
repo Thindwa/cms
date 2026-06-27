@@ -4,6 +4,7 @@ namespace App\Modules\CaseManagement\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CaseCategory extends Model
 {
@@ -11,5 +12,17 @@ class CaseCategory extends Model
 
     protected $table = 'case_categories';
 
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'required_fields'];
+
+    protected function casts(): array
+    {
+        return [
+            'required_fields' => 'array',
+        ];
+    }
+
+    public function cases(): HasMany
+    {
+        return $this->hasMany(CaseModel::class, 'category_id');
+    }
 }

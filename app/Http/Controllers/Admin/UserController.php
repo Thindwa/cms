@@ -28,7 +28,7 @@ class UserController extends Controller
                 ->orWhere('username', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%"));
         }
-        $users = $query->orderBy('name')->paginate(15)->withQueryString();
+        $users = $query->orderBy('name')->paginate((int) config('app.items_per_page', 15))->withQueryString();
         return view('admin.users.index', compact('users'));
     }
 

@@ -5,16 +5,19 @@ namespace App\Modules\CaseManagement\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Models\CaseDocument;
 use App\Modules\CaseManagement\Models\CaseModel;
+use App\Modules\CaseManagement\Services\ActivityService;
 use App\Modules\CaseManagement\Services\CaseDocumentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 
 class CaseDocumentController extends Controller
 {
     public function __construct(
-        protected CaseDocumentService $documentService
+        protected CaseDocumentService $documentService,
+        protected ActivityService $activityService,
     ) {}
 
     public function store(Request $request, CaseModel $case): RedirectResponse
@@ -35,6 +38,8 @@ class CaseDocumentController extends Controller
             $this->documentService->upload($case, $file, $title, $details);
             $uploaded++;
         }
+
+        $this->activityService->log($case, 'document.uploaded', "{$uploaded} document(s) uploaded");
 
         $message = $uploaded === 1 ? '1 document uploaded.' : "{$uploaded} documents uploaded.";
 
@@ -58,11 +63,30 @@ class CaseDocumentController extends Controller
         );
     }
 
+    public function preview(CaseModel $case, CaseDocument $document): BinaryFileResponse|RedirectResponse
+    {
+        $this->authorize('view', $case);
+        if ($document->case_id !== $case->id) {
+            abort(404);
+        }
+        if (! $this->documentService->exists($document)) {
+            return redirect()->route('cases.show', $case)->with('error', 'File not found.');
+        }
+
+        $path = $this->documentService->getStoragePath($document);
+
+        return response()->file($path, [
+            'Content-Type' => $document->mime_type ?? 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
+        ]);
+    }
+
     public function destroy(CaseModel $case, string $document): RedirectResponse
     {
         $this->authorize('deleteDocument', $case);
         $doc = CaseDocument::query()->where('case_id', $case->id)->findOrFail($document);
         $this->documentService->softDelete($doc);
+        $this->activityService->log($case, 'document.deleted', 'Document moved to recycle bin: ' . $doc->original_name);
 
         return redirect()->route('cases.show', $case)->with('success', 'Document moved to recycle bin.')->with('tab', 'documents');
     }
@@ -72,6 +96,7 @@ class CaseDocumentController extends Controller
         $this->authorize('restoreDocument', $case);
         $doc = CaseDocument::onlyTrashed()->where('case_id', $case->id)->findOrFail($document);
         $this->documentService->restore($doc);
+        $this->activityService->log($case, 'document.restored', 'Document restored: ' . $doc->original_name);
 
         return redirect()->route('cases.show', $case)->with('success', 'Document restored successfully.')->with('tab', 'documents');
     }
@@ -95,7 +120,7 @@ class CaseDocumentController extends Controller
             });
         }
 
-        $documents = $query->paginate(20)->withQueryString();
+        $documents = $query->paginate((int) config('app.items_per_page', 20))->withQueryString();
 
         return view('case_management::documents.recycle-bin', compact('documents'));
     }

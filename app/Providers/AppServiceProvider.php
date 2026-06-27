@@ -3,34 +3,51 @@
 namespace App\Providers;
 
 use App\Core\Settings\SettingsService;
+use App\Modules\CaseManagement\Models\CaseCategory;
 use App\Modules\CaseManagement\Models\CaseDocument;
 use App\Modules\CaseManagement\Models\CaseImportBatch;
 use App\Modules\CaseManagement\Models\CaseImportBulkBatch;
 use App\Modules\CaseManagement\Models\CaseModel;
+use App\Modules\CaseManagement\Policies\CaseCategoryPolicy;
 use App\Modules\CaseManagement\Policies\CaseDocumentPolicy;
 use App\Modules\CaseManagement\Policies\CaseImportBatchPolicy;
 use App\Modules\CaseManagement\Policies\CaseImportBulkBatchPolicy;
 use App\Modules\CaseManagement\Policies\CasePolicy;
+use Carbon\Carbon;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        require_once __DIR__ . '/../Helpers/audit.php';
     }
 
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        Password::defaults(fn () => Password::min(10)
+            ->mixedCase()
+            ->numbers()
+            ->symbols()
+            ->uncompromised()
+        );
+
         $this->applyMailSettings();
+        $this->applyAppSettings();
+
+        Carbon::macro('formatDate', fn () => $this->format(config('app.date_format', 'Y-m-d')));
+        Carbon::macro('formatDateTime', fn () => $this->format(config('app.date_format', 'Y-m-d') . ' ' . config('app.time_format', 'H:i')));
 
         Gate::policy(CaseModel::class, CasePolicy::class);
+        Gate::policy(CaseCategory::class, CaseCategoryPolicy::class);
         Gate::policy(CaseDocument::class, CaseDocumentPolicy::class);
         Gate::policy(CaseImportBatch::class, CaseImportBatchPolicy::class);
         Gate::policy(CaseImportBulkBatch::class, CaseImportBulkBatchPolicy::class);
@@ -66,6 +83,21 @@ class AppServiceProvider extends ServiceProvider
             if ($fromName !== '') {
                 Config::set('mail.from.name', $fromName);
             }
+        } catch (\Throwable) {
+            // Ignore when settings table is unavailable (install/migrations).
+        }
+    }
+
+    protected function applyAppSettings(): void
+    {
+        try {
+            /** @var SettingsService $settings */
+            $settings = $this->app->make(SettingsService::class);
+
+            Config::set('app.name', (string) $settings->get('app_name', Config::get('app.name')));
+            Config::set('app.date_format', (string) $settings->get('date_format', 'Y-m-d'));
+            Config::set('app.time_format', (string) $settings->get('time_format', 'H:i'));
+            Config::set('app.items_per_page', (int) $settings->get('items_per_page', 15));
         } catch (\Throwable) {
             // Ignore when settings table is unavailable (install/migrations).
         }

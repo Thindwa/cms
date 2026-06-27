@@ -21,6 +21,7 @@ class CaseManagementModule implements ModuleInterface
     {
         $router->prefix('cases')->name('cases.')->middleware('auth')->group(function () use ($router) {
             $router->get('/', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'index'])->name('index');
+            $router->get('export-csv', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'exportCsv'])->name('exportCsv');
             $router->get('create', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'create'])->name('create');
             $router->post('/', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'store'])->name('store');
             $router->get('reports', [\App\Modules\CaseManagement\Controllers\ReportController::class, 'index'])->name('reports');
@@ -41,6 +42,7 @@ class CaseManagementModule implements ModuleInterface
             $router->post('imports/{import}/rollback', [\App\Modules\CaseManagement\Controllers\CaseImportController::class, 'rollback'])->name('imports.rollback');
             $router->post('{case}/documents', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'store'])->name('documents.store');
             $router->get('{case}/documents/{document}/download', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'download'])->name('documents.download');
+            $router->get('{case}/documents/{document}/preview', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'preview'])->name('documents.preview');
             $router->delete('{case}/documents/{document}', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'destroy'])->name('documents.destroy');
             $router->post('{case}/documents/{document}/restore', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'restore'])->name('documents.restore');
             $router->get('documents/recycle-bin', [\App\Modules\CaseManagement\Controllers\CaseDocumentController::class, 'recycleBin'])->name('documents.recycle-bin');
@@ -48,6 +50,15 @@ class CaseManagementModule implements ModuleInterface
             $router->post('{case}/notes', [\App\Modules\CaseManagement\Controllers\CaseNoteController::class, 'store'])->name('notes.store');
             $router->put('{case}/notes/{note}', [\App\Modules\CaseManagement\Controllers\CaseNoteController::class, 'update'])->name('notes.update');
             $router->delete('{case}/notes/{note}', [\App\Modules\CaseManagement\Controllers\CaseNoteController::class, 'destroy'])->name('notes.destroy');
+            $router->post('bulk-categorize', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'bulkCategorize'])->name('bulkCategorize');
+            $router->get('calendar', [\App\Modules\CaseManagement\Controllers\CalendarController::class, 'index'])->name('calendar');
+            $router->patch('{case}/officer', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'updateOfficerDealing'])->name('officer');
+            $router->get('categories', [\App\Modules\CaseManagement\Controllers\CategoryController::class, 'index'])->name('categories.index');
+            $router->get('categories/create', [\App\Modules\CaseManagement\Controllers\CategoryController::class, 'create'])->name('categories.create');
+            $router->post('categories', [\App\Modules\CaseManagement\Controllers\CategoryController::class, 'store'])->name('categories.store');
+            $router->get('categories/{category}/edit', [\App\Modules\CaseManagement\Controllers\CategoryController::class, 'edit'])->name('categories.edit');
+            $router->put('categories/{category}', [\App\Modules\CaseManagement\Controllers\CategoryController::class, 'update'])->name('categories.update');
+            $router->delete('categories/{category}', [\App\Modules\CaseManagement\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
             $router->delete('{case}', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'destroy'])->name('destroy');
             $router->get('{case}', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'show'])->name('show');
             $router->get('{case}/edit', [\App\Modules\CaseManagement\Controllers\CaseController::class, 'edit'])->name('edit');
@@ -62,7 +73,7 @@ class CaseManagementModule implements ModuleInterface
             'cases.create' => 'Register new case',
             'cases.edit' => 'Edit case',
             'cases.delete' => 'Delete case',
-            'cases.assign' => 'Assign officer to case',
+
             'cases.notes.add' => 'Add case notes',
             'cases.notes.edit' => 'Edit case notes',
             'cases.notes.delete' => 'Delete case notes',
@@ -77,6 +88,10 @@ class CaseManagementModule implements ModuleInterface
             'cases.import.execute' => 'Run dry-run and final import execution',
             'cases.import.rollback' => 'Rollback imported batches',
             'cases.import.reset' => 'Reset selected import batches',
+            'cases.categories.view' => 'View categories',
+            'cases.categories.create' => 'Create categories',
+            'cases.categories.edit' => 'Edit categories',
+            'cases.categories.delete' => 'Delete categories',
             'reports.view' => 'View reports',
             'reports.export' => 'Export reports',
         ];
@@ -86,8 +101,10 @@ class CaseManagementModule implements ModuleInterface
     {
         return [
             ['label' => 'Case List', 'route' => 'cases.index', 'permission' => 'cases.view', 'icon' => 'bi-list-ul'],
+            ['label' => 'Calendar', 'route' => 'cases.calendar', 'permission' => 'cases.view', 'icon' => 'bi-calendar-event'],
             ['label' => 'Reports', 'route' => 'cases.reports', 'permission' => 'reports.view', 'icon' => 'bi-bar-chart-line'],
             ['label' => 'Excel Imports', 'route' => 'cases.imports.index', 'permission' => 'cases.import.view', 'icon' => 'bi-file-earmark-spreadsheet'],
+            ['label' => 'Categories', 'route' => 'cases.categories.index', 'permission' => 'cases.categories.view', 'icon' => 'bi-tags'],
             ['label' => 'Recycle Bin', 'route' => 'cases.documents.recycle-bin', 'permission' => 'cases.documents.recycle_bin', 'icon' => 'bi-recycle'],
         ];
     }

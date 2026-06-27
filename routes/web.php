@@ -39,7 +39,10 @@ Route::middleware('auth')->group(function () {
         Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
+        Route::get('audit-logs/stats', [AuditLogController::class, 'stats'])->name('audit.stats');
         Route::get('audit-logs/export', [AuditLogController::class, 'export'])->name('audit.export');
+        Route::get('audit-logs/export/xlsx', [AuditLogController::class, 'exportXlsx'])->name('audit.export-xlsx');
+        Route::delete('audit-logs/batch', [AuditLogController::class, 'batchDelete'])->name('audit.batch-delete');
         Route::get('audit-logs/{auditLog}', [AuditLogController::class, 'show'])->name('audit.show');
     });
 });

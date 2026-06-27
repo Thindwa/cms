@@ -2,7 +2,9 @@
 
 namespace App\Modules\CaseManagement\Controllers;
 
+use App\Core\Settings\SettingsService;
 use App\Http\Controllers\Controller;
+use App\Modules\CaseManagement\Models\CaseCategory;
 use App\Modules\CaseManagement\Models\CaseModel;
 use Barryvdh\DomPDF\Facade\Pdf as PdfFacade;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,8 +20,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected SettingsService $settings
+    ) {
         $this->middleware('can:reports.view');
     }
 
@@ -30,7 +33,9 @@ class ReportController extends Controller
             'date_to' => ['nullable', 'date'],
         ]);
 
-        if ($request->filled('date_from') && $request->filled('date_to')) {
+        $hasDateFilter = $request->filled('date_from') && $request->filled('date_to');
+
+        if ($hasDateFilter) {
             $inputFrom = Carbon::parse((string) $request->input('date_from'))->startOfDay();
             $inputTo = Carbon::parse((string) $request->input('date_to'))->startOfDay();
             if ($inputFrom->gt($inputTo)) {
@@ -42,8 +47,42 @@ class ReportController extends Controller
             }
         }
 
-        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : now()->startOfMonth();
-        $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : now();
+        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : null;
+        $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : null;
+
+        $quarterFilter = $request->get('quarter');
+        $monthFilter = $request->get('month');
+        $yearFilter = $request->get('year');
+
+        if ($monthFilter && $yearFilter && ! $dateFrom && ! $dateTo && ! $quarterFilter) {
+            $year = (int) $yearFilter;
+            $month = (int) $monthFilter;
+            $dateFrom = Carbon::createFromDate($year, $month, 1)->startOfDay();
+            $dateTo = Carbon::createFromDate($year, $month, 1)->endOfMonth()->endOfDay();
+        }
+
+        if ($quarterFilter && $yearFilter && ! $dateFrom && ! $dateTo && ! $monthFilter) {
+            $qStarts = [
+                1 => (int) $this->settings->get('q1_start_month', 1),
+                2 => (int) $this->settings->get('q2_start_month', 4),
+                3 => (int) $this->settings->get('q3_start_month', 7),
+                4 => (int) $this->settings->get('q4_start_month', 10),
+            ];
+            $startMonth = $qStarts[(int) $quarterFilter];
+            $nextQ = ((int) $quarterFilter % 4) + 1;
+            $endMonth = $qStarts[$nextQ] - 1;
+            if ($endMonth < $startMonth) {
+                $endMonth += 12;
+            }
+            $year = (int) $yearFilter;
+            $dateFrom = Carbon::createFromDate($year, $startMonth, 1)->startOfDay();
+            if ($endMonth > 12) {
+                $dateTo = Carbon::createFromDate($year + 1, $endMonth - 12, 1)->endOfMonth()->endOfDay();
+            } else {
+                $dateTo = Carbon::createFromDate($year, $endMonth, 1)->endOfMonth()->endOfDay();
+            }
+        }
+
         $allowedReportTypes = [
             'summary',
             'cases_per_officer',
@@ -53,29 +92,30 @@ class ReportController extends Controller
             'by_officer',
             'by_category',
             'by_status',
-            'by_priority',
             'aging',
             'hearing_schedule',
+            'monthly',
+            'quarterly',
         ];
         $reportType = in_array($request->get('report_type', 'summary'), $allowedReportTypes, true)
             ? $request->get('report_type', 'summary')
             : 'summary';
         $allowedDateBasis = ['created_at', 'date_filed', 'updated_at', 'hearing_date'];
-        $dateBasis = in_array($request->get('date_basis', 'created_at'), $allowedDateBasis, true)
-            ? $request->get('date_basis', 'created_at')
-            : 'created_at';
+        $dateBasis = in_array($request->get('date_basis', 'date_filed'), $allowedDateBasis, true)
+            ? $request->get('date_basis', 'date_filed')
+            : 'date_filed';
 
         $query = $this->buildBaseQuery($request, $dateFrom, $dateTo, $dateBasis);
 
-        $data = $this->buildReportData($reportType, $query, $dateFrom, $dateTo);
+        $data = $this->buildReportData($reportType, $query, $dateFrom, $dateTo, $request);
 
         $export = $request->get('export');
         if ($export === 'pdf') {
             $this->authorize('reports.export');
             $pdf = PdfFacade::loadView('case_management::reports.pdf', [
                 'title' => $data['title'],
-                'dateFrom' => $dateFrom->format('Y-m-d'),
-                'dateTo' => $dateTo->format('Y-m-d'),
+                'dateFrom' => $dateFrom?->format('Y-m-d') ?? '—',
+                'dateTo' => $dateTo?->format('Y-m-d') ?? '—',
                 'rows' => $data['rows'],
             ]);
             return response()->streamDownload(fn () => print($pdf->output()), 'report-' . now()->format('Y-m-d-His') . '.pdf', ['Content-Type' => 'application/pdf']);
@@ -87,12 +127,12 @@ class ReportController extends Controller
 
         return view('case_management::reports.index', [
             'reportType' => $reportType,
-            'dateFrom' => $dateFrom->format('Y-m-d'),
-            'dateTo' => $dateTo->format('Y-m-d'),
+            'dateFrom' => $dateFrom?->format('Y-m-d'),
+            'dateTo' => $dateTo?->format('Y-m-d'),
             'dateBasis' => $dateBasis,
             'dateBasisOptions' => [
-                'created_at' => 'Created Date',
                 'date_filed' => 'Date Filed',
+                'created_at' => 'Created Date',
                 'updated_at' => 'Last Updated',
                 'hearing_date' => 'Hearing Date',
             ],
@@ -102,15 +142,24 @@ class ReportController extends Controller
                 'cases_registered' => 'Cases Registered',
                 'case_category_breakdown' => 'Case Category Breakdown',
                 'case_status' => 'Case Status Report',
-                'by_priority' => 'Priority Distribution',
                 'aging' => 'Case Aging',
                 'hearing_schedule' => 'Hearing Schedule',
+                'monthly' => 'Monthly Intake',
+                'quarterly' => 'Quarterly Intake',
             ],
             'statusFilter' => $request->get('status'),
-            'priorityFilter' => $request->get('priority'),
             'officerFilter' => $request->get('officer_name'),
+            'categoryFilter' => $request->get('category_id'),
+            'quarterFilter' => $quarterFilter,
+            'monthFilter' => $monthFilter,
+            'yearFilter' => $yearFilter,
+            'quarterStarts' => [
+                1 => (int) $this->settings->get('q1_start_month', 1),
+                2 => (int) $this->settings->get('q2_start_month', 4),
+                3 => (int) $this->settings->get('q3_start_month', 7),
+                4 => (int) $this->settings->get('q4_start_month', 10),
+            ],
             'statusOptions' => CaseModel::query()->select('status')->distinct()->pluck('status')->filter()->sort()->values(),
-            'priorityOptions' => collect(range(1, 10)),
             'officerOptions' => CaseModel::query()
                 ->select('title')
                 ->whereNotNull('title')
@@ -119,95 +168,97 @@ class ReportController extends Controller
                 ->orderBy('title')
                 ->pluck('title')
                 ->values(),
+            'categoryOptions' => CaseCategory::query()->orderBy('name')->get(['id', 'name']),
             'data' => $data,
         ]);
     }
 
-    protected function buildBaseQuery(Request $request, Carbon $dateFrom, Carbon $dateTo, string $dateBasis): Builder
+    protected function buildBaseQuery(Request $request, Carbon|null $dateFrom, Carbon|null $dateTo, string $dateBasis): Builder
     {
         $query = CaseModel::query()
             ->whereNotNull('case_number')
             ->where('case_number', '!=', '');
 
-        if (in_array($dateBasis, ['date_filed', 'hearing_date'], true)) {
-            $query->whereNotNull($dateBasis)
-                ->whereBetween($dateBasis, [$dateFrom->toDateString(), $dateTo->toDateString()]);
-        } else {
-            $query->whereBetween($dateBasis, [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]);
+        if ($dateFrom && $dateTo) {
+            if ($dateBasis === 'hearing_date') {
+                $query->whereNotNull('hearing_date')
+                    ->whereBetween('hearing_date', [$dateFrom->toDateString(), $dateTo->toDateString()]);
+            } elseif ($dateBasis === 'date_filed') {
+                $query->whereBetween('date_filed', [$dateFrom->toDateString(), $dateTo->toDateString()]);
+            } else {
+                $query->whereBetween($dateBasis, [$dateFrom->copy()->startOfDay(), $dateTo->copy()->endOfDay()]);
+            }
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status')->toString());
         }
-        if ($request->filled('priority')) {
-            $query->where('priority', (int) $request->input('priority'));
-        }
         if ($request->filled('officer_name')) {
             $query->where('title', $request->string('officer_name')->toString());
+        }
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->string('category_id')->toString());
         }
 
         return $query;
     }
 
-    protected function buildReportData(string $reportType, Builder $query, Carbon $dateFrom, Carbon $dateTo): array
+    protected function buildReportData(string $reportType, Builder $query, Carbon|null $dateFrom, Carbon|null $dateTo, Request $request): array
     {
         return match ($reportType) {
             'cases_per_officer', 'by_officer' => $this->officerReportData($query),
             'cases_registered' => $this->registeredCasesReportData($query),
             'case_category_breakdown', 'by_category' => $this->categoryReportData($query),
             'case_status', 'by_status' => $this->statusReportData($query),
-            'by_priority' => $this->priorityReportData($query),
             'aging' => $this->agingReportData($query),
             'hearing_schedule' => $this->hearingScheduleReportData($query),
+            'monthly' => $this->monthlyReportData($query, $dateFrom, $dateTo, $request),
+            'quarterly' => $this->quarterlyReportData($query, $dateFrom, $dateTo, $request),
             default => $this->summaryReportData($query, $dateFrom, $dateTo),
         };
     }
 
-    protected function summaryReportData(Builder $query, Carbon $dateFrom, Carbon $dateTo): array
+    protected function summaryReportData(Builder $query, Carbon|null $dateFrom, Carbon|null $dateTo): array
     {
         $total = (clone $query)->count();
-        $withNature = (clone $query)->whereNotNull('nature_of_claim')->where('nature_of_claim', '!=', '')->count();
+        $categorized = (clone $query)->whereNotNull('category_id')->count();
+        $uncategorized = $total - $categorized;
         $withDocuments = (clone $query)->has('documents')->count();
         $withNotes = (clone $query)->has('notes')->count();
-        $openCases = (clone $query)->where('status', '!=', 'closed')->count();
+        $activeCases = (clone $query)->where('status', 'active')->count();
+        $dormantCases = (clone $query)->where('status', 'dormant')->count();
         $closedCases = (clone $query)->where('status', 'closed')->count();
-        $highPriority = (clone $query)->where('priority', '>=', 8)->count();
         $upcomingHearings = (clone $query)->whereBetween('hearing_date', [now()->toDateString(), now()->addDays(30)->toDateString()])->count();
+
+        $categoryRows = (clone $query)->with('category')->get()
+            ->groupBy(fn (CaseModel $case) => $case->category?->name ?? 'Uncategorized')
+            ->map(fn (Collection $cases, string $category) => ['Category' => $category, 'Total' => $cases->count()])
+            ->sortByDesc('Total')
+            ->values()
+            ->toArray();
 
         $rows = [
             ['Metric' => 'Total cases', 'Value' => $total],
-            ['Metric' => 'Open cases', 'Value' => $openCases],
+            ['Metric' => 'Active cases', 'Value' => $activeCases],
+            ['Metric' => 'Dormant cases', 'Value' => $dormantCases],
             ['Metric' => 'Closed cases', 'Value' => $closedCases],
-            ['Metric' => 'High priority', 'Value' => $highPriority],
-            ['Metric' => 'With nature of claim', 'Value' => $withNature],
+            ['Metric' => 'Categorized', 'Value' => $categorized],
+            ['Metric' => 'Uncategorized', 'Value' => $uncategorized],
             ['Metric' => 'With documents', 'Value' => $withDocuments],
             ['Metric' => 'With notes', 'Value' => $withNotes],
             ['Metric' => 'Upcoming hearings (next 30 days)', 'Value' => $upcomingHearings],
         ];
 
         $statusRows = $this->statusRows($query);
-        $priorityRows = $this->priorityRows($query);
-
-        $trendRows = (clone $query)->get(['date_filed', 'created_at'])
-            ->map(function (CaseModel $case) {
-                $basis = $case->date_filed ?? optional($case->created_at)?->startOfDay();
-                return $basis ? $basis->format('Y-m') : null;
-            })
-            ->filter()
-            ->countBy()
-            ->sortKeys()
-            ->map(fn ($count, $month) => ['Month' => $month, 'Total' => $count])
-            ->values()
-            ->toArray();
 
         return [
             'title' => 'Executive Case Summary',
             'rows' => $rows,
             'cards' => [
                 ['label' => 'Total Cases', 'value' => $total, 'class' => 'bg-primary text-white'],
-                ['label' => 'Open Cases', 'value' => $openCases, 'class' => 'bg-warning text-dark'],
-                ['label' => 'Closed Cases', 'value' => $closedCases, 'class' => 'bg-success text-white'],
-                ['label' => 'High Priority', 'value' => $highPriority, 'class' => 'bg-danger text-white'],
+                ['label' => 'Active Cases', 'value' => $activeCases, 'class' => 'bg-success text-white'],
+                ['label' => 'Dormant Cases', 'value' => $dormantCases, 'class' => 'bg-secondary text-white'],
+                ['label' => 'Closed Cases', 'value' => $closedCases, 'class' => 'bg-danger text-white'],
             ],
             'charts' => [
                 [
@@ -216,27 +267,25 @@ class ReportController extends Controller
                     'type' => 'doughnut',
                     'labels' => array_column($statusRows, 'Status'),
                     'values' => array_column($statusRows, 'Total'),
+                    'colors' => array_map(fn ($label) => match ($label) {
+                        'Active' => '#198754',   // green
+                        'Closed' => '#dc3545',   // red
+                        'Dormant' => '#6c757d',  // gray
+                        default => '#0d6efd',    // blue
+                    }, array_column($statusRows, 'Status')),
                 ],
                 [
-                    'id' => 'priorityDistribution',
-                    'title' => 'Priority Distribution',
-                    'type' => 'bar',
-                    'labels' => array_column($priorityRows, 'Priority'),
-                    'values' => array_column($priorityRows, 'Total'),
-                ],
-                [
-                    'id' => 'monthlyTrend',
-                    'title' => 'Monthly Intake Trend',
-                    'type' => 'line',
-                    'labels' => array_column($trendRows, 'Month'),
-                    'values' => array_column($trendRows, 'Total'),
+                    'id' => 'categorySplit',
+                    'title' => 'Category Split',
+                    'type' => 'doughnut',
+                    'labels' => array_column($categoryRows, 'Category'),
+                    'values' => array_column($categoryRows, 'Total'),
                 ],
             ],
             'sections' => [
                 ['title' => 'By Status', 'rows' => $statusRows],
-                ['title' => 'By Priority', 'rows' => $priorityRows],
             ],
-            'subtitle' => 'Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d'),
+            'subtitle' => $dateFrom && $dateTo ? 'Period: ' . $dateFrom->formatDate() . ' to ' . $dateTo->formatDate() : 'All time',
         ];
     }
 
@@ -250,10 +299,10 @@ class ReportController extends Controller
                 return [
                     'Officer' => $officer,
                     'Cases' => $cases->count(),
-                    'Open' => $cases->where('status', '!=', 'closed')->count(),
-                    'Closed' => $cases->where('status', 'closed')->count(),
-                    'High Priority' => $cases->where('priority', '>=', 8)->count(),
-                    'Upcoming Hearings (30d)' => $upcoming,
+                'Active' => $cases->where('status', 'active')->count(),
+                'Dormant' => $cases->where('status', 'dormant')->count(),
+                'Closed' => $cases->where('status', 'closed')->count(),
+                'Upcoming Hearings (30d)' => $upcoming,
                 ];
             })
             ->sortByDesc('Cases')
@@ -282,11 +331,10 @@ class ReportController extends Controller
             ->map(function (CaseModel $case) {
                 return [
                     'Case No' => $case->case_number,
-                    'Registered Date' => optional($case->created_at)->format('Y-m-d') ?? '—',
-                    'Date Filed' => optional($case->date_filed)->format('Y-m-d') ?? '—',
+                    'Registered Date' => optional($case->created_at)->formatDate() ?? '—',
+                    'Date Filed' => optional($case->date_filed)->formatDate() ?? '—',
                     'Officer' => $case->title ?: 'Unassigned',
                     'Status' => $case->status ?: 'Unknown',
-                    'Priority' => $case->priority ?? '—',
                 ];
             })
             ->toArray();
@@ -300,10 +348,10 @@ class ReportController extends Controller
 
     protected function categoryReportData(Builder $query): array
     {
-        $rows = (clone $query)->get()
-            ->groupBy(fn (CaseModel $case) => filled($case->nature_of_claim) ? trim((string) $case->nature_of_claim) : 'Uncategorized')
+        $rows = (clone $query)->with('category')->get()
+            ->groupBy(fn (CaseModel $case) => $case->category?->name ?? 'Uncategorized')
             ->map(fn (Collection $cases, string $category) => [
-                'Nature of Claim' => $category,
+                'Category' => $category,
                 'Total' => $cases->count(),
             ])
             ->sortByDesc('Total')
@@ -311,13 +359,13 @@ class ReportController extends Controller
             ->toArray();
 
         return [
-            'title' => 'Cases by Nature of Claim',
+            'title' => 'Cases by Category',
             'rows' => $rows,
             'charts' => [[
                 'id' => 'claimCategory',
-                'title' => 'Nature of Claim Split',
+                'title' => 'Category Split',
                 'type' => 'doughnut',
-                'labels' => array_column($rows, 'Nature of Claim'),
+                'labels' => array_column($rows, 'Category'),
                 'values' => array_column($rows, 'Total'),
             ]],
         ];
@@ -354,37 +402,6 @@ class ReportController extends Controller
         ];
     }
 
-    protected function priorityRows(Builder $query): array
-    {
-        $total = max((clone $query)->count(), 1);
-        return (clone $query)->get()
-            ->groupBy(fn (CaseModel $case) => filled($case->priority) ? ucfirst((string) $case->priority) : 'Unknown')
-            ->map(fn (Collection $cases, string $priority) => [
-                'Priority' => $priority,
-                'Total' => $cases->count(),
-                'Share %' => round(($cases->count() / $total) * 100, 2),
-            ])
-            ->sortByDesc('Total')
-            ->values()
-            ->toArray();
-    }
-
-    protected function priorityReportData(Builder $query): array
-    {
-        $rows = $this->priorityRows($query);
-        return [
-            'title' => 'Priority Distribution',
-            'rows' => $rows,
-            'charts' => [[
-                'id' => 'priorityOverview',
-                'title' => 'Priority Overview',
-                'type' => 'bar',
-                'labels' => array_column($rows, 'Priority'),
-                'values' => array_column($rows, 'Total'),
-            ]],
-        ];
-    }
-
     protected function agingReportData(Builder $query): array
     {
         $buckets = [
@@ -394,7 +411,7 @@ class ReportController extends Controller
             '181-365 days' => ['min' => 181, 'max' => 365],
             '365+ days' => ['min' => 366, 'max' => null],
         ];
-        $rows = collect(array_keys($buckets))->mapWithKeys(fn ($bucket) => [$bucket => ['Bucket' => $bucket, 'Total' => 0, 'Open' => 0, 'Closed' => 0]])->toArray();
+        $rows = collect(array_keys($buckets))->mapWithKeys(fn ($bucket) => [$bucket => ['Bucket' => $bucket, 'Total' => 0, 'Active' => 0, 'Dormant' => 0, 'Closed' => 0]])->toArray();
 
         (clone $query)->get(['status', 'date_filed', 'created_at'])->each(function (CaseModel $case) use (&$rows, $buckets) {
             $start = $case->date_filed ?? optional($case->created_at)?->startOfDay();
@@ -408,8 +425,10 @@ class ReportController extends Controller
                     $rows[$label]['Total']++;
                     if ($case->status === 'closed') {
                         $rows[$label]['Closed']++;
+                    } elseif ($case->status === 'dormant') {
+                        $rows[$label]['Dormant']++;
                     } else {
-                        $rows[$label]['Open']++;
+                        $rows[$label]['Active']++;
                     }
                     break;
                 }
@@ -438,14 +457,13 @@ class ReportController extends Controller
             ->limit(500)
             ->get()
             ->map(fn (CaseModel $case) => [
-                'Hearing Date' => $case->hearing_date?->format('Y-m-d') ?? '—',
+                'Hearing Date' => $case->hearing_date?->formatDate() ?? '—',
                 'Case No' => $case->case_number,
                 'AG Reference' => $case->reference_number ?? '—',
                 'Officer Dealing' => $case->title ?: 'Unassigned',
                 'Claimant' => $case->claimant ?? '—',
                 'Defendant' => $case->defendant ?? '—',
                 'Status' => $case->status ?? '—',
-                'Priority' => $case->priority ?? '—',
             ])
             ->toArray();
 
@@ -455,7 +473,111 @@ class ReportController extends Controller
         ];
     }
 
-    protected function exportExcel(string $title, array $rows, Carbon $dateFrom, Carbon $dateTo): StreamedResponse
+    protected function monthlyReportData(Builder $query, Carbon|null $dateFrom, Carbon|null $dateTo, Request $request): array
+    {
+        $categories = CaseCategory::query()->orderBy('name')->pluck('name')->toArray();
+        $dateField = $request->get('date_basis', 'created_at');
+
+        $grouped = (clone $query)->with('category')->get()
+            ->groupBy(fn (CaseModel $case) => optional($case->{$dateField})?->format('Y-m') ?? 'Unknown')
+            ->sortKeys();
+
+        $rows = [];
+        foreach ($grouped as $period => $cases) {
+            $row = ['MONTH' => $period];
+            $categorizedTotal = 0;
+            foreach ($categories as $cat) {
+                $count = $cases->filter(fn ($c) => $c->category?->name === $cat)->count();
+                $row[$cat] = $count;
+                $categorizedTotal += $count;
+            }
+            $uncategorized = $cases->count() - $categorizedTotal;
+            $row['UNCATEGORIZED'] = $uncategorized;
+            $row['TOTAL'] = $cases->count();
+            $rows[] = $row;
+        }
+
+        return [
+            'title' => 'Monthly Intake by Category',
+            'rows' => $rows,
+            'charts' => [[
+                'id' => 'monthlyBreakdown',
+                'title' => 'Monthly Intake',
+                'type' => 'bar',
+                'labels' => array_column($rows, 'MONTH'),
+                'values' => array_column($rows, 'TOTAL'),
+            ]],
+            'subtitle' => $dateFrom && $dateTo ? 'Period: ' . $dateFrom->formatDate() . ' to ' . $dateTo->formatDate() : 'All time',
+        ];
+    }
+
+    protected function quarterlyReportData(Builder $query, Carbon|null $dateFrom, Carbon|null $dateTo, Request $request): array
+    {
+        $categories = CaseCategory::query()->orderBy('name')->pluck('name')->toArray();
+        $dateField = $request->get('date_basis', 'created_at');
+        $qStarts = [
+            1 => (int) $this->settings->get('q1_start_month', 1),
+            2 => (int) $this->settings->get('q2_start_month', 4),
+            3 => (int) $this->settings->get('q3_start_month', 7),
+            4 => (int) $this->settings->get('q4_start_month', 10),
+        ];
+
+        $orderedStarts = $qStarts;
+        asort($orderedStarts);
+        $orderedNums = array_keys($orderedStarts);
+        $orderedMonths = array_values($orderedStarts);
+        $firstStart = $orderedMonths[0];
+
+        $grouped = (clone $query)->with('category')->get()
+            ->groupBy(function (CaseModel $case) use ($dateField, $orderedNums, $orderedMonths, $firstStart) {
+                $date = $case->{$dateField};
+                if (! $date) {
+                    return 'Unknown';
+                }
+                $month = (int) $date->format('n');
+                $year = (int) $date->format('Y');
+
+                $adjusted = ($month - $firstStart + 12) % 12;
+                $index = intdiv($adjusted, 3);
+                $q = $orderedNums[$index] ?? 4;
+                return "Q{$q} {$year}";
+            })
+            ->sortKeys();
+
+        $rows = [];
+        foreach ($grouped as $period => $cases) {
+            $row = ['QUARTER' => $period];
+            $categorizedTotal = 0;
+            foreach ($categories as $cat) {
+                $count = $cases->filter(fn ($c) => $c->category?->name === $cat)->count();
+                $row[$cat] = $count;
+                $categorizedTotal += $count;
+            }
+            $uncategorized = $cases->count() - $categorizedTotal;
+            $row['UNCATEGORIZED'] = $uncategorized;
+            $row['TOTAL'] = $cases->count();
+            $rows[] = $row;
+        }
+
+        $subtitle = $dateFrom && $dateTo
+            ? 'Period: ' . $dateFrom->formatDate() . ' to ' . $dateTo->formatDate()
+            : 'All time';
+
+        return [
+            'title' => 'Quarterly Intake by Category',
+            'rows' => $rows,
+            'charts' => [[
+                'id' => 'quarterlyBreakdown',
+                'title' => 'Quarterly Intake',
+                'type' => 'bar',
+                'labels' => array_column($rows, 'QUARTER'),
+                'values' => array_column($rows, 'TOTAL'),
+            ]],
+            'subtitle' => $subtitle,
+        ];
+    }
+
+    protected function exportExcel(string $title, array $rows, Carbon|null $dateFrom, Carbon|null $dateTo): StreamedResponse
     {
         $filename = 'report-' . now()->format('Y-m-d-His') . '.xlsx';
         $headers = [
@@ -467,7 +589,7 @@ class ReportController extends Controller
             $active = $sheet->getActiveSheet();
             $active->setTitle('Report');
             $active->setCellValue('A1', $title);
-            $active->setCellValue('A2', 'Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d'));
+            $active->setCellValue('A2', $dateFrom && $dateTo ? 'Period: ' . $dateFrom->format('Y-m-d') . ' to ' . $dateTo->format('Y-m-d') : 'All time');
             $rowIndex = 4;
 
             if (! empty($rows)) {

@@ -50,6 +50,7 @@
         .app-content {
             padding: 1.5rem;
         }
+        .toast-container { z-index: 1080; }
         @media (max-width: 991.98px) {
             .app-content {
                 padding: 1rem;
@@ -75,6 +76,12 @@
             .sidebar-link i {
                 width: 1rem;
             }
+        }
+        @media print {
+            .app-sidebar, .app-topbar, .no-print { display: none !important; }
+            .app-main { margin: 0 !important; padding: 0 !important; }
+            .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+            .chart-container { page-break-inside: avoid; }
         }
     </style>
     @stack('styles')
@@ -137,16 +144,35 @@
                 @endif
             </div>
             @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                <div class="alert alert-success alert-dismissible fade show d-md-none mb-3">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             @endif
             @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                <div class="alert alert-danger alert-dismissible fade show d-md-none mb-3">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             @endif
             @yield('content')
-        </main>
-    </div>
+    </main>
+</div>
 
-    <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    @if(session('success'))
+        <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-check-circle-fill me-1"></i> {{ session('success') }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="toast align-items-center text-bg-danger border-0 show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ session('error') }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    @endif
+</div>
+
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header">

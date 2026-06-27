@@ -22,6 +22,13 @@ class SettingsService
         'upcoming_notifications_enabled' => '0',
         'upcoming_notifications_days' => '7',
         'upcoming_notifications_time' => '08:00',
+        'dormant_years' => '3',
+        'document_retention_days' => '90',
+        'document_reminder_days' => '10',
+        'q1_start_month' => '1',
+        'q2_start_month' => '4',
+        'q3_start_month' => '7',
+        'q4_start_month' => '10',
     ];
 
     public function get(string $key, mixed $default = null): mixed

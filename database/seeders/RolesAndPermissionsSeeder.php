@@ -34,6 +34,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'admin.settings.edit' => 'Edit system settings',
             'admin.audit.view' => 'View centralized audit logs',
             'admin.audit.export' => 'Export audit logs',
+            'admin.audit.delete' => 'Delete audit logs',
         ];
 
         foreach ($corePermissions as $name => $guardName) {
@@ -61,6 +62,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'admin.roles.delete',
                 'admin.audit.view',
                 'admin.audit.export',
+                'admin.audit.delete',
             ])->get()
         );
 
@@ -70,7 +72,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'cases.view',
             'cases.create',
             'cases.edit',
-            'cases.assign',
             'cases.notes.add',
             'cases.notes.edit',
             'cases.notes.delete',

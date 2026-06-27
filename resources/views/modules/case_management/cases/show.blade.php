@@ -40,8 +40,8 @@
             <div class="text-muted small">Officer Dealing: {{ $case->title ?: '—' }}</div>
         </div>
         <div class="text-end small text-muted">
-            <div>Created: {{ $case->created_at->format('Y-m-d H:i') }}</div>
-            <div>Updated: {{ $case->updated_at->format('Y-m-d H:i') }}</div>
+            <div>Created: {{ $case->created_at->formatDateTime() }}</div>
+            <div>Updated: {{ $case->updated_at->formatDateTime() }}</div>
         </div>
     </div>
 </div>
@@ -51,6 +51,7 @@
     <li class="nav-item"><a class="nav-link {{ $activeTab === 'overview' ? 'active' : '' }}" data-bs-toggle="tab" href="#overview">Overview</a></li>
     <li class="nav-item"><a class="nav-link {{ $activeTab === 'documents' ? 'active' : '' }}" data-bs-toggle="tab" href="#documents">Documents</a></li>
     <li class="nav-item"><a class="nav-link {{ $activeTab === 'notes' ? 'active' : '' }}" data-bs-toggle="tab" href="#notes">Officer Notes / Comments (Updates)</a></li>
+    <li class="nav-item"><a class="nav-link {{ $activeTab === 'activity' ? 'active' : '' }}" data-bs-toggle="tab" href="#activity">Activity Timeline</a></li>
 </ul>
 
 <div class="tab-content">
@@ -64,11 +65,11 @@
                             <li><span class="overview-label">Serial Number</span><span class="overview-value">{{ $case->case_number }}</span></li>
                             <li><span class="overview-label">Case Title</span><span class="overview-value">{{ $case->case_title ?? '—' }}</span></li>
                             <li><span class="overview-label">Status</span><span class="overview-value">{{ $case->status ? ucfirst(str_replace('_', ' ', $case->status)) : '—' }}</span></li>
-                            <li><span class="overview-label">Date Filed</span><span class="overview-value">{{ $case->date_filed?->format('Y-m-d') ?? '—' }}</span></li>
-                            <li><span class="overview-label">Upcoming Hearing Date</span><span class="overview-value">{{ $case->hearing_date?->format('Y-m-d') ?? '—' }}</span></li>
+                            <li><span class="overview-label">Date Filed</span><span class="overview-value">{{ $case->date_filed?->formatDate() ?? '—' }}</span></li>
+                            <li><span class="overview-label">Upcoming Hearing Date</span><span class="overview-value">{{ $case->hearing_date?->formatDate() ?? '—' }}</span></li>
                             <li><span class="overview-label">AG Reference Number</span><span class="overview-value">{{ $case->reference_number ?? '—' }}</span></li>
-                            <li><span class="overview-label">Civil Case Number</span><span class="overview-value">{{ $case->civil_case_number ?? '—' }}</span></li>
                             <li><span class="overview-label">Cause Number</span><span class="overview-value">{{ $case->cause_number ?? '—' }}</span></li>
+                            <li><span class="overview-label">Category</span><span class="overview-value">{{ $case->category_name }}</span></li>
                             <li><span class="overview-label">Nature of Claim</span><span class="overview-value">{{ $case->nature_of_claim ?? '—' }}</span></li>
                         </ul>
                     </div>
@@ -89,11 +90,49 @@
                     <div class="card-body">
                         <h6 class="mb-3">Parties and Ownership</h6>
                         <ul class="overview-list">
-                            <li><span class="overview-label">Officer Dealing</span><span class="overview-value">{{ $case->title ?: '—' }}</span></li>
+                            <li><span class="overview-label">Officer Dealing</span><span class="overview-value">
+                                @can('update', $case)
+                                <form method="POST" action="{{ route('cases.officer', $case) }}" class="d-inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ $case->title }}" required>
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-check-lg"></i></button>
+                                    </div>
+                                </form>
+                                @else
+                                    {{ $case->title ?: '—' }}
+                                @endcan
+                            </span></li>
                             <li><span class="overview-label">Entered By</span><span class="overview-value">{{ $case->createdByUser?->name ?? '—' }}</span></li>
                             <li><span class="overview-label">Claimant</span><span class="overview-value">{{ $case->claimant ?? '—' }}</span></li>
                             <li><span class="overview-label">Defendant</span><span class="overview-value">{{ $case->defendant ?? '—' }}</span></li>
                         </ul>
+                    </div>
+                </div>
+                <div class="card overview-card mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">Officer Dealing History</h6>
+                        @forelse($officerChanges as $log)
+                            <div class="d-flex gap-2 mb-2 py-1 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                <div class="flex-shrink-0 mt-1">
+                                    <i class="bi bi-arrow-counterclockwise text-primary fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="small fw-medium">
+                                        {{ $log->actor?->name ?? 'System' }}
+                                        <span class="fw-normal text-muted">· {{ $log->created_at->formatDateTime() }}</span>
+                                    </div>
+                                    <div class="small mt-1">
+                                        <span class="text-decoration-line-through text-danger">{{ $log->old_values['title'] ?? '—' }}</span>
+                                        <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                        <span class="text-success">{{ $log->new_values['title'] ?? '—' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-muted small mb-0">No officer changes recorded.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -128,9 +167,13 @@
                             <td>v{{ $doc->version }}</td>
                             <td>{{ $doc->display_type }}</td>
                             <td>{{ $doc->uploader?->name ?? '—' }}</td>
-                            <td>{{ $doc->created_at->format('Y-m-d H:i') }}</td>
+                            <td>{{ $doc->created_at->formatDateTime() }}</td>
                             <td class="d-flex gap-1 flex-wrap">
                                 <a href="{{ route('cases.documents.download', [$case, $doc]) }}" class="btn btn-sm btn-outline-secondary">Download</a>
+                                <button type="button" class="btn btn-sm btn-outline-primary preview-btn"
+                                        data-url="{{ route('cases.documents.preview', [$case, $doc]) }}"
+                                        data-name="{{ $doc->original_name }}"
+                                        data-type="{{ $doc->mime_type }}">View</button>
                                 @can('deleteDocument', $case)
                                 <form method="POST" action="{{ route('cases.documents.destroy', [$case, $doc->id]) }}"
                                       data-confirm-title="Delete Document"
@@ -169,7 +212,7 @@
         @forelse($case->notes as $note)
             <div class="border-start border-2 ps-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start gap-2">
-                    <small class="text-muted">{{ $note->user->name ?? '—' }} · {{ $note->created_at->format('Y-m-d H:i') }}</small>
+                    <small class="text-muted">{{ $note->user->name ?? '—' }} · {{ $note->created_at->formatDateTime() }}</small>
                     @if(auth()->user()?->can('updateNote', $case) || auth()->user()?->can('deleteNote', $case))
                         <div class="d-flex gap-1">
                             @can('updateNote', $case)
@@ -212,7 +255,111 @@
             <p class="text-muted small">No officer notes/comments yet.</p>
         @endforelse
     </div>
+    <div class="tab-pane fade {{ $activeTab === 'activity' ? 'show active' : '' }}" id="activity">
+        @php $activities = $case->activities; @endphp
+        @forelse($activities as $activity)
+            <div class="d-flex gap-2 mb-2 py-1">
+                <div class="flex-shrink-0 mt-1">
+                    @php
+                        $icon = match($activity->action) {
+                            'case.created' => 'bi-plus-circle-fill text-success',
+                            'case.updated' => 'bi-pencil-fill text-primary',
+                            'case.deleted' => 'bi-trash-fill text-danger',
+                            'case.categorized' => 'bi-tag-fill text-info',
+                            'note.created' => 'bi-sticky-fill text-warning',
+                            'note.updated' => 'bi-pencil-square text-primary',
+                            'note.deleted' => 'bi-x-circle-fill text-danger',
+                            'document.uploaded' => 'bi-file-earmark-arrow-up-fill text-success',
+                            'document.deleted' => 'bi-file-earmark-x-fill text-danger',
+                            'document.restored' => 'bi-arrow-counterclockwise text-info',
+                            default => 'bi-record-circle text-secondary',
+                        };
+                    @endphp
+                    <i class="bi {{ $icon }} fs-5"></i>
+                </div>
+                <div class="flex-grow-1 min-width-0">
+                    <div class="small fw-medium">{{ $activity->description ?? Str::title(str_replace('.', ' ', $activity->action)) }}</div>
+                    <div class="small text-muted">
+                        {{ $activity->user?->name ?? 'System' }} · {{ $activity->created_at->diffForHumans() }}
+                    </div>
+                </div>
+            </div>
+        @empty
+            <p class="text-muted small">No activity recorded yet.</p>
+        @endforelse
+    </div>
 </div>
+@push('styles')
+<style>
+#documentPreviewOffcanvas {
+    --bs-offcanvas-width: 85vw;
+}
+#documentPreviewOffcanvas .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+    background: #e9ecef;
+}
+#documentPreviewOffcanvas .preview-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding-bottom: .75rem;
+}
+#documentPreviewOffcanvas .preview-frame {
+    flex: 1;
+    border: 0;
+    border-radius: 8px;
+    background: #fff;
+    min-height: 0;
+}
+#documentPreviewOffcanvas .preview-frame img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    margin: auto;
+    object-fit: contain;
+}
+#documentPreviewOffcanvas .preview-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: #6c757d;
+    text-align: center;
+}
+#documentPreviewOffcanvas .preview-placeholder i {
+    font-size: 4rem;
+}
+@media (max-width: 767.98px) {
+    #documentPreviewOffcanvas {
+        --bs-offcanvas-width: 100vw;
+    }
+}
+</style>
+@endpush
+
+{{-- Document Preview Offcanvas --}}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="documentPreviewOffcanvas" aria-labelledby="documentPreviewLabel">
+    <div class="offcanvas-header bg-white border-bottom">
+        <h5 class="offcanvas-title" id="documentPreviewLabel">Document Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3" id="previewBody">
+        <div class="preview-toolbar">
+            <span class="small text-muted text-truncate" id="previewFileName"></span>
+            <a href="#" id="previewDownloadLink" class="btn btn-sm btn-outline-secondary ms-auto">Download</a>
+        </div>
+        <div class="preview-frame d-flex" id="previewFrame">
+            <div class="preview-placeholder">
+                <i class="bi bi-file-earmark"></i>
+                <span>Select a document to preview</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -239,6 +386,44 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.tinymce) {
                 window.tinymce.triggerSave();
             }
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const offcanvasEl = document.getElementById('documentPreviewOffcanvas');
+    if (!offcanvasEl) return;
+
+    const previewFrame = document.getElementById('previewFrame');
+    const previewFileName = document.getElementById('previewFileName');
+    const previewDownloadLink = document.getElementById('previewDownloadLink');
+
+    let activeBsOffcanvas = null;
+
+    document.querySelectorAll('.preview-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const url = this.dataset.url;
+            const name = this.dataset.name;
+            const mime = (this.dataset.type || '').toLowerCase();
+
+            previewFileName.textContent = name;
+            previewDownloadLink.href = url.replace('/preview', '/download');
+
+            const isImage = mime.startsWith('image/');
+            const isPdf = mime === 'application/pdf';
+
+            if (isImage) {
+                previewFrame.innerHTML = '<img src="' + url + '" alt="' + name + '" style="display:block;max-width:100%;max-height:100%;margin:auto;object-fit:contain;">';
+            } else if (isPdf) {
+                previewFrame.innerHTML = '<iframe src="' + url + '" style="flex:1;border:0;border-radius:8px;background:#fff;min-height:0;width:100%;" title="' + name + '"></iframe>';
+            } else {
+                previewFrame.innerHTML = '<div class="preview-placeholder"><i class="bi bi-file-earmark"></i><span>Preview not available for this file type.</span><a href="' + previewDownloadLink.href + '" class="btn btn-sm btn-primary">Download to view</a></div>';
+            }
+
+            if (!activeBsOffcanvas) {
+                activeBsOffcanvas = new bootstrap.Offcanvas(offcanvasEl);
+            }
+            activeBsOffcanvas.show();
         });
     });
 });

@@ -38,14 +38,22 @@
                         @error('reference_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Civil Case Number</label>
-                        <input type="text" name="civil_case_number" class="form-control @error('civil_case_number') is-invalid @enderror" value="{{ old('civil_case_number', $case->civil_case_number) }}">
-                        @error('civil_case_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Defendant</label>
                         <input type="text" name="defendant" class="form-control @error('defendant') is-invalid @enderror" value="{{ old('defendant', $case->defendant) }}">
                         @error('defendant')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category_id" id="categorySelect" class="form-select @error('category_id') is-invalid @enderror">
+                            <option value="">— Select Category —</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}" data-required="{{ json_encode($cat->required_fields ?? []) }}" @selected(old('category_id', $case->category_id) === $cat->id)>{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                        <div id="requiredFieldsInfo" class="small text-muted mt-1 d-none">
+                            <i class="bi bi-info-circle"></i> Required for this category: <span id="requiredFieldsList"></span>
+                        </div>
+                        @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nature of Claim</label>
@@ -70,23 +78,11 @@
                     <div class="mb-3">
                         <label class="form-label">Status <span class="text-danger">*</span></label>
                         <select name="status" class="form-select @error('status') is-invalid @enderror" required>
-                            <option value="open" @selected(old('status', $case->status) === 'open')>Open</option>
-                            <option value="in_progress" @selected(old('status', $case->status) === 'in_progress')>In Progress</option>
+                            <option value="active" @selected(old('status', $case->status) === 'active')>Active</option>
+                            <option value="dormant" @selected(old('status', $case->status) === 'dormant')>Dormant</option>
                             <option value="closed" @selected(old('status', $case->status) === 'closed')>Closed</option>
                         </select>
                         @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Priority (1-10) <span class="text-danger">*</span></label>
-                        <input type="number"
-                               name="priority"
-                               min="1"
-                               max="10"
-                               step="1"
-                               class="form-control @error('priority') is-invalid @enderror"
-                               value="{{ old('priority', (int) $case->priority) }}"
-                               required>
-                        @error('priority')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Case Summary (Primary)</label>
@@ -117,6 +113,25 @@ document.addEventListener('DOMContentLoaded', function () {
         toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link table | removeformat | code',
         content_style: 'body { font-family: Segoe UI, Arial, sans-serif; font-size: 14px; }'
     });
+
+    const categorySelect = document.getElementById('categorySelect');
+    const requiredInfo = document.getElementById('requiredFieldsInfo');
+    const requiredList = document.getElementById('requiredFieldsList');
+    const fieldLabels = { claimant: 'Claimant', defendant: 'Defendant', reference_number: 'AG Ref', cause_number: 'Cause No', nature_of_claim: 'Nature of Claim', date_filed: 'Date Filed', hearing_date: 'Hearing Date' };
+
+    function updateRequiredFields() {
+        const selected = categorySelect.options[categorySelect.selectedIndex];
+        const fields = selected ? JSON.parse(selected.dataset.required || '[]') : [];
+        if (fields.length > 0) {
+            requiredList.textContent = fields.map(f => fieldLabels[f] || f).join(', ');
+            requiredInfo.classList.remove('d-none');
+        } else {
+            requiredInfo.classList.add('d-none');
+        }
+    }
+
+    categorySelect.addEventListener('change', updateRequiredFields);
+    updateRequiredFields();
 });
 </script>
 @endpush

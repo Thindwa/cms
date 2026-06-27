@@ -4,7 +4,6 @@ namespace App\Modules\CaseManagement\Imports;
 
 use App\Core\Audit\AuditLog;
 use App\Modules\CaseManagement\Models\CaseModel;
-use App\Modules\CaseManagement\Models\CaseNote;
 use App\Modules\CaseManagement\Services\CaseManagementService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +20,12 @@ class ExcelCaseImportService
         'claimant',
         'reference_number',
         'cause_number',
-        'civil_case_number',
         'description',
         'officer_dealing',
         'entered_by_legacy',
         'defendant',
         'hearing_date',
+        'status',
     ];
 
     public function __construct(
@@ -117,6 +116,29 @@ class ExcelCaseImportService
                 $stats['warning_issues']++;
             }
 
+            $statusVal = ! empty($normalized['status']) ? strtolower(trim($normalized['status'])) : 'active';
+            if (! in_array($statusVal, ['active', 'dormant', 'closed'], true)) {
+                $issues[] = [
+                    'severity' => 'warning',
+                    'row' => $row,
+                    'type' => 'invalid_status',
+                    'message' => "Status \"{$normalized['status']}\" is invalid; will default to 'active'.",
+                ];
+                $stats['warning_issues']++;
+            }
+
+            foreach (['reference_number', 'defendant', 'nature_of_claim', 'claimant', 'cause_number', 'title', 'officer_dealing'] as $field) {
+                if (! empty($normalized[$field]) && mb_strlen((string) $normalized[$field]) > 255) {
+                    $issues[] = [
+                        'severity' => 'warning',
+                        'row' => $row,
+                        'type' => 'truncation_risk',
+                        'message' => "{$field} value exceeds 255 characters and will be truncated.",
+                    ];
+                    $stats['warning_issues']++;
+                }
+            }
+
             $dateFiled = $this->parseDate($normalized['date_filed'], $options['date_mode']);
             if (! empty($normalized['date_filed']) && $dateFiled === null) {
                 $stats['invalid_dates']++;
@@ -174,7 +196,7 @@ class ExcelCaseImportService
             'mapping' => $mapping,
             'options' => $options,
             'stats' => $stats,
-            'issues' => array_slice($issues, 0, 200),
+            'issues' => $issues,
             'mapped_preview' => $mappedPreview,
         ];
     }
@@ -201,12 +223,10 @@ class ExcelCaseImportService
             'cases_created' => 0,
             'cases_updated' => 0,
             'cases_matched' => 0,
-            'notes_created' => 0,
             'errors' => [],
             'rollback' => [
                 'created_case_ids' => [],
                 'updated_cases' => [],
-                'created_note_ids' => [],
             ],
         ];
 
@@ -262,9 +282,6 @@ class ExcelCaseImportService
                                 if (empty($case->cause_number) && ! empty($raw['cause_number'])) {
                                     $updated['cause_number'] = $raw['cause_number'];
                                 }
-                                if (empty($case->civil_case_number) && ! empty($raw['civil_case_number'])) {
-                                    $updated['civil_case_number'] = $raw['civil_case_number'];
-                                }
                                 if (empty($case->defendant) && ! empty($raw['defendant'])) {
                                     $updated['defendant'] = $raw['defendant'];
                                 }
@@ -309,35 +326,32 @@ class ExcelCaseImportService
                                 );
                             }
 
-                            // Only add import note when the import actually changed the case.
-                            if ($wasUpdated) {
-                                $noteText = $this->buildNoteBody($raw, $dateFiled, $row, true, $updatedFields);
-                                if ($noteText !== null && $userId !== null) {
-                                    $note = $this->createNoteIfUnique($case->id, $userId, $noteText);
-                                    if ($note) {
-                                        $stats['notes_created']++;
-                                        $stats['rollback']['created_note_ids'][] = $note->id;
-                                    }
-                                }
-                            }
-
                             return;
                         }
 
-                        $case = CaseModel::create([
+                        $description = $raw['description'] ? htmlspecialchars($raw['description'], ENT_QUOTES, 'UTF-8', false) : null;
+                        $status = ! empty($raw['status']) ? strtolower(trim($raw['status'])) : 'active';
+                        if (! in_array($status, ['active', 'dormant', 'closed'], true)) {
+                            $status = 'active';
+                        }
+
+                        $case = new CaseModel();
+                        $case->skipSanitization = true;
+                        $case->forceFill([
                             'case_number' => $this->caseService->generateCaseNumber(),
                             'date_filed' => $dateFiled,
                             'hearing_date' => $hearingDate,
                             'reference_number' => $raw['reference_number'] ?: null,
-                            'civil_case_number' => $raw['civil_case_number'] ?: null,
                             'defendant' => $raw['defendant'] ?: null,
                             'claimant' => $raw['claimant'] ?: null,
                             'cause_number' => $raw['cause_number'] ?: null,
                             'title' => $officerDealing,
-                            'description' => $raw['description'] ?: null,
+                            'description' => $description,
+                            'status' => $status,
                             'created_by' => $userId,
                             'updated_by' => $userId,
                         ]);
+                        $case->save();
 
                         $stats['cases_created']++;
                         $stats['rollback']['created_case_ids'][] = $case->id;
@@ -349,23 +363,24 @@ class ExcelCaseImportService
                             newValues: $case->toArray()
                         );
 
-                        $noteText = $this->buildNoteBody($raw, $dateFiled, $row, false, ['created']);
-                        if ($noteText !== null && $userId !== null) {
-                            $note = $this->createNoteIfUnique($case->id, $userId, $noteText);
-                            if ($note) {
-                                $stats['notes_created']++;
-                                $stats['rollback']['created_note_ids'][] = $note->id;
-                            }
-                        }
                     });
                 } else {
-                    $key = $this->buildDryRunKey($raw);
-                    if ($key !== null && isset($seenDryRunKeys[$key])) {
-                        $stats['cases_matched']++;
-                    } else {
+                    if ($options['duplicate_policy'] === 'create_new') {
                         $stats['cases_created']++;
-                        if ($key !== null) {
-                            $seenDryRunKeys[$key] = true;
+                    } else {
+                        $existingCase = $this->findExistingCase($raw);
+                        if ($existingCase) {
+                            $stats['cases_matched']++;
+                        } else {
+                            $key = $this->buildDryRunKey($raw);
+                            if ($key !== null && isset($seenDryRunKeys[$key])) {
+                                $stats['cases_matched']++;
+                            } else {
+                                $stats['cases_created']++;
+                                if ($key !== null) {
+                                    $seenDryRunKeys[$key] = true;
+                                }
+                            }
                         }
                     }
                 }
@@ -385,14 +400,14 @@ class ExcelCaseImportService
     {
         $mapping = [
             'date_filed' => 'DATE',
-            'claimant' => 'PLAINTIFF',
-            'reference_number' => 'REFERNCE NO',
-            'cause_number' => 'CAUSE NO',
-            'description' => 'LATEST ISSUE',
-            'officer_dealing' => 'FILE MOVED TO',
-            'entered_by_legacy' => 'ENTERED BY',
-            'defendant' => 'LEGAL OPINION RESPONDANT',
-            'civil_case_number' => 'CIVIL CASE NO',
+            'claimant' => 'CLAIMANT',
+            'defendant' => 'DEFENDANT',
+            'reference_number' => 'REFERENCE',
+            'cause_number' => 'CAUSE NO.',
+            'description' => 'CLAIM',
+            'officer_dealing' => 'OFFICER DEALING',
+            'status' => 'STATUS',
+            'entered_by_legacy' => 'DATA ENTERED BY',
             'hearing_date' => '',
         ];
 
@@ -402,11 +417,11 @@ class ExcelCaseImportService
     public function defaultOptions(): array
     {
         return [
-            'duplicate_policy' => 'update_existing',
+            'duplicate_policy' => 'create_new',
             'missing_officer_policy' => 'default',
             'default_officer_value' => 'Unassigned Officer',
             'date_mode' => 'auto',
-            'text_policy' => 'clean',
+            'text_policy' => 'raw',
         ];
     }
 
@@ -420,14 +435,14 @@ class ExcelCaseImportService
         $map = [];
         $map['date_filed'] = $normalized['date'] ?? $normalized['datefiled'] ?? null;
         $map['claimant'] = $normalized['plaintiff'] ?? $normalized['claimant'] ?? null;
-        $map['reference_number'] = $normalized['refernceno'] ?? $normalized['referenceno'] ?? $normalized['referencenumber'] ?? null;
+        $map['reference_number'] = $normalized['reference'] ?? $normalized['refernceno'] ?? $normalized['referenceno'] ?? $normalized['referencenumber'] ?? null;
         $map['cause_number'] = $normalized['causeno'] ?? $normalized['caseno'] ?? null;
-        $map['civil_case_number'] = $normalized['civilcaseno'] ?? null;
-        $map['description'] = $normalized['latestissue'] ?? $normalized['issue'] ?? $normalized['description'] ?? null;
+        $map['description'] = $normalized['claim'] ?? $normalized['latestissue'] ?? $normalized['issue'] ?? $normalized['description'] ?? null;
         $map['officer_dealing'] = $normalized['filemovedto'] ?? $normalized['officerdealing'] ?? null;
-        $map['entered_by_legacy'] = $normalized['enteredby'] ?? null;
+        $map['entered_by_legacy'] = $normalized['dataenteredby'] ?? $normalized['enteredby'] ?? null;
         $map['defendant'] = $normalized['legalopinionrespondant'] ?? $normalized['respondant'] ?? $normalized['defendant'] ?? null;
         $map['hearing_date'] = $normalized['hearingdate'] ?? null;
+        $map['status'] = $normalized['status'] ?? null;
 
         return $map;
     }
@@ -498,9 +513,7 @@ class ExcelCaseImportService
             }
 
             $column = $headerToColumn[$sourceHeader];
-            $rawValue = in_array($targetField, ['date_filed', 'hearing_date'], true)
-                ? $worksheet->getCell($column . $row)->getValue()
-                : $worksheet->getCell($column . $row)->getFormattedValue();
+            $rawValue = $worksheet->getCell($column . $row)->getFormattedValue();
 
             if (is_string($rawValue)) {
                 $value = $textPolicy === 'clean' ? $this->clean($rawValue) : trim($rawValue);
@@ -559,56 +572,6 @@ class ExcelCaseImportService
         }
 
         return null;
-    }
-
-    protected function buildNoteBody(array $raw, ?Carbon $dateFiled, int $row, bool $isUpdate, array $changedFields = []): ?string
-    {
-        $parts = [];
-        $parts[] = $isUpdate ? 'Imported update row from Excel.' : 'Imported initial row from Excel.';
-        $parts[] = "Row: {$row}";
-        if ($changedFields !== []) {
-            $parts[] = 'Changed fields: ' . implode(', ', $changedFields);
-        }
-
-        if (! empty($raw['description'])) {
-            $parts[] = 'Latest issue: ' . $raw['description'];
-        }
-        if (! empty($raw['entered_by_legacy'])) {
-            $parts[] = 'Entered by (legacy): ' . $raw['entered_by_legacy'];
-        }
-        if (! empty($raw['officer_dealing'])) {
-            $parts[] = 'File moved to / officer (legacy): ' . $raw['officer_dealing'];
-        }
-        if ($dateFiled) {
-            $parts[] = 'Date filed: ' . $dateFiled->format('Y-m-d');
-        }
-
-        $body = implode("\n", $parts);
-
-        return trim($body) !== '' ? $body : null;
-    }
-
-    protected function createNoteIfUnique(string $caseId, int $userId, string $body): ?CaseNote
-    {
-        $normalized = trim($body);
-        if ($normalized === '') {
-            return null;
-        }
-
-        $exists = CaseNote::query()
-            ->where('case_id', $caseId)
-            ->where('body', $normalized)
-            ->exists();
-
-        if ($exists) {
-            return null;
-        }
-
-        return CaseNote::create([
-            'case_id' => $caseId,
-            'user_id' => $userId,
-            'body' => $normalized,
-        ]);
     }
 
     protected function logImportAudit(

@@ -23,7 +23,7 @@ class UpcomingHearingNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $when = $this->case->hearing_date?->format('Y-m-d') ?? 'N/A';
+        $when = $this->case->hearing_date?->formatDate() ?? 'N/A';
         $caseNo = $this->case->case_number;
         $officer = $this->case->title ?: 'Unassigned';
 

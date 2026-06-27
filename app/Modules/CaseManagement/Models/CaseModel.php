@@ -2,6 +2,7 @@
 
 namespace App\Modules\CaseManagement\Models;
 
+use App\Helpers\HtmlSanitizer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -15,13 +16,26 @@ class CaseModel extends Model
 
     protected $table = 'cases';
 
+    public bool $skipSanitization = false;
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $case): void {
+            if ($case->skipSanitization) {
+                return;
+            }
+            if ($case->isDirty('description')) {
+                $case->description = HtmlSanitizer::clean($case->description);
+            }
+        });
+    }
+
     protected $fillable = [
         'case_number',
         'case_title',
         'date_filed',
         'hearing_date',
         'reference_number',
-        'civil_case_number',
         'defendant',
         'nature_of_claim',
         'claimant',
@@ -29,8 +43,7 @@ class CaseModel extends Model
         'title',
         'description',
         'status',
-        'priority',
-        'assigned_to',
+        'category_id',
         'created_by',
         'updated_by',
     ];
@@ -40,7 +53,6 @@ class CaseModel extends Model
         return [
             'date_filed' => 'date',
             'hearing_date' => 'date',
-            'priority' => 'integer',
         ];
     }
 
@@ -66,6 +78,21 @@ class CaseModel extends Model
 
     public function notes(): HasMany
     {
-        return $this->hasMany(CaseNote::class, 'case_id');
+        return $this->hasMany(CaseNote::class, 'case_id')->latest();
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CaseCategory::class, 'category_id');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(CaseActivity::class, 'case_id')->latest();
+    }
+
+    public function getCategoryNameAttribute(): string
+    {
+        return $this->category?->name ?? 'Uncategorized';
     }
 }

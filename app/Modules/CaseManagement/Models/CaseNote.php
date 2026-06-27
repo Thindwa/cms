@@ -2,6 +2,7 @@
 
 namespace App\Modules\CaseManagement\Models;
 
+use App\Helpers\HtmlSanitizer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,15 @@ class CaseNote extends Model
     protected $table = 'case_notes';
 
     protected $fillable = ['case_id', 'user_id', 'body'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $note): void {
+            if ($note->isDirty('body')) {
+                $note->body = HtmlSanitizer::clean($note->body);
+            }
+        });
+    }
 
     public function case(): BelongsTo
     {

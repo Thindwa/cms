@@ -5,11 +5,16 @@ namespace App\Modules\CaseManagement\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\CaseManagement\Models\CaseModel;
 use App\Modules\CaseManagement\Models\CaseNote;
+use App\Modules\CaseManagement\Services\ActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CaseNoteController extends Controller
 {
+    public function __construct(
+        protected ActivityService $activityService,
+    ) {}
+
     public function store(Request $request, CaseModel $case): RedirectResponse
     {
         $this->authorize('createNote', $case);
@@ -21,6 +26,7 @@ class CaseNoteController extends Controller
             'user_id' => auth()->id(),
             'body' => $request->body,
         ]);
+        $this->activityService->log($case, 'note.created', 'Note added to case');
         return redirect()->route('cases.show', $case)->with('success', 'Note added.')->with('tab', 'notes');
     }
 
@@ -36,6 +42,7 @@ class CaseNoteController extends Controller
         $note->update([
             'body' => $request->string('edit_body')->toString(),
         ]);
+        $this->activityService->log($case, 'note.updated', 'Note updated');
 
         return redirect()->route('cases.show', $case)->with('success', 'Note updated.')->with('tab', 'notes');
     }
@@ -46,6 +53,7 @@ class CaseNoteController extends Controller
         $this->ensureNoteBelongsToCase($case, $note);
 
         $note->delete();
+        $this->activityService->log($case, 'note.deleted', 'Note deleted from case');
 
         return redirect()->route('cases.show', $case)->with('success', 'Note deleted.')->with('tab', 'notes');
     }

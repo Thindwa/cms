@@ -41,6 +41,13 @@ class SettingsController extends Controller
             'upcoming_notifications_enabled' => ['nullable', 'boolean'],
             'upcoming_notifications_days' => ['required', 'integer', 'min:1', 'max:60'],
             'upcoming_notifications_time' => ['required', 'date_format:H:i'],
+            'dormant_years' => ['required', 'integer', 'min:1', 'max:50'],
+            'document_retention_days' => ['required', 'integer', 'min:1', 'max:3650'],
+            'document_reminder_days' => ['required', 'integer', 'min:1', 'max:365'],
+            'q1_start_month' => ['required', 'integer', 'min:1', 'max:12'],
+            'q2_start_month' => ['required', 'integer', 'min:1', 'max:12'],
+            'q3_start_month' => ['required', 'integer', 'min:1', 'max:12'],
+            'q4_start_month' => ['required', 'integer', 'min:1', 'max:12'],
         ]);
         $validated['upcoming_notifications_enabled'] = $request->boolean('upcoming_notifications_enabled') ? 1 : 0;
         $this->settings->update($validated);
