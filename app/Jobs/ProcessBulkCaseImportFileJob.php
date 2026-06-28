@@ -67,10 +67,17 @@ class ProcessBulkCaseImportFileJob implements ShouldQueue
             return;
         }
 
-        $total = $batch->files()->count();
-        $completed = $batch->files()->whereIn('status', ['completed', 'failed'])->count();
-        $successful = $batch->files()->where('status', 'completed')->count();
-        $failed = $batch->files()->where('status', 'failed')->count();
+        $counts = $batch->files()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN status IN ('completed','failed') THEN 1 ELSE 0 END) as completed")
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful")
+            ->selectRaw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed")
+            ->first();
+
+        $total = (int) ($counts->total ?? 0);
+        $completed = (int) ($counts->completed ?? 0);
+        $successful = (int) ($counts->successful ?? 0);
+        $failed = (int) ($counts->failed ?? 0);
 
         $status = $batch->status;
         $completedAt = null;

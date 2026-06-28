@@ -44,7 +44,7 @@ class DashboardController extends Controller
             ->leftJoin('case_categories', 'cases.category_id', '=', 'case_categories.id')
             ->selectRaw("COALESCE(case_categories.name, 'Uncategorized') as category_name")
             ->selectRaw('COUNT(*) as count')
-            ->groupBy(DB::raw('cases.category_id'))
+            ->groupBy(DB::raw('cases.category_id'), 'case_categories.name')
             ->orderByDesc('count')
             ->pluck('count', 'category_name')
             ->toArray();

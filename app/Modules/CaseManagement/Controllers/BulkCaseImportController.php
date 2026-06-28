@@ -168,8 +168,12 @@ class BulkCaseImportController extends Controller
                 ->with('error', 'This bulk import batch is already completed and cannot be started again.');
         }
 
-        $pendingCount = $bulk->files()->where('status', 'pending')->count();
-        $failedCount = $bulk->files()->where('status', 'failed')->count();
+        $statusCounts = $bulk->files()
+            ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count")
+            ->selectRaw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_count")
+            ->first();
+        $pendingCount = (int) ($statusCounts->pending_count ?? 0);
+        $failedCount = (int) ($statusCounts->failed_count ?? 0);
         if (($pendingCount + $failedCount) === 0) {
             return redirect()->route('cases.imports.bulk.show', $bulk)
                 ->with('error', 'No pending/failed files available to process for this batch.');
@@ -201,11 +205,18 @@ class BulkCaseImportController extends Controller
         $processed = (int) $bulk->processed_files;
         $percent = (int) floor(($processed / $total) * 100);
 
+        $statusCounts = $bulk->files()
+            ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending")
+            ->selectRaw("SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing")
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")
+            ->selectRaw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed")
+            ->first();
+
         $counts = [
-            'pending' => $bulk->files()->where('status', 'pending')->count(),
-            'processing' => $bulk->files()->where('status', 'processing')->count(),
-            'completed' => $bulk->files()->where('status', 'completed')->count(),
-            'failed' => $bulk->files()->where('status', 'failed')->count(),
+            'pending' => (int) ($statusCounts->pending ?? 0),
+            'processing' => (int) ($statusCounts->processing ?? 0),
+            'completed' => (int) ($statusCounts->completed ?? 0),
+            'failed' => (int) ($statusCounts->failed ?? 0),
         ];
 
         return response()->json([

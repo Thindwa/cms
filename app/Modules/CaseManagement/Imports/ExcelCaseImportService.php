@@ -531,27 +531,39 @@ class ExcelCaseImportService
         return $result;
     }
 
+    private array $existingCaseCache = [];
+
     protected function findExistingCase(array $raw): ?CaseModel
     {
+        $cacheKey = null;
+        if (! empty($raw['reference_number'])) {
+            $cacheKey = 'ref:' . $raw['reference_number'];
+        }
+
+        if ($cacheKey !== null && isset($this->existingCaseCache[$cacheKey])) {
+            return $this->existingCaseCache[$cacheKey];
+        }
+
+        $case = null;
         if (! empty($raw['reference_number']) && ! empty($raw['cause_number'])) {
-            return CaseModel::query()
+            $case = CaseModel::query()
                 ->where('reference_number', $raw['reference_number'])
                 ->where('cause_number', $raw['cause_number'])
                 ->first();
-        }
-
-        if (! empty($raw['reference_number']) && ! empty($raw['claimant'])) {
-            return CaseModel::query()
+        } elseif (! empty($raw['reference_number']) && ! empty($raw['claimant'])) {
+            $case = CaseModel::query()
                 ->where('reference_number', $raw['reference_number'])
                 ->where('claimant', $raw['claimant'])
                 ->first();
+        } elseif (! empty($raw['reference_number'])) {
+            $case = CaseModel::query()->where('reference_number', $raw['reference_number'])->first();
         }
 
-        if (! empty($raw['reference_number'])) {
-            return CaseModel::query()->where('reference_number', $raw['reference_number'])->first();
+        if ($case !== null && $cacheKey !== null) {
+            $this->existingCaseCache[$cacheKey] = $case;
         }
 
-        return null;
+        return $case;
     }
 
     protected function resolveOfficerDealing(mixed $officerValue, mixed $enteredBy, array $options): ?string

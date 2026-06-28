@@ -33,6 +33,7 @@ class UpcomingHearingNotificationService
         $end = Carbon::today()->addDays($daysAhead);
 
         $cases = CaseModel::query()
+            ->select(['id', 'case_number', 'title', 'hearing_date', 'status'])
             ->whereNotNull('hearing_date')
             ->whereDate('hearing_date', '>=', $start->toDateString())
             ->whereDate('hearing_date', '<=', $end->toDateString())

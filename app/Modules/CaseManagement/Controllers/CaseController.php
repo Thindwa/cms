@@ -31,7 +31,7 @@ class CaseController extends Controller
     public function index(Request $request): View
     {
         $query = CaseModel::query()
-            ->with(['createdByUser', 'category'])
+            ->with('category')
             ->whereNotNull('case_number')
             ->where('case_number', '!=', '');
 
@@ -111,7 +111,7 @@ class CaseController extends Controller
 
     public function show(CaseModel $case): View
     {
-        $case->load(['category', 'createdByUser', 'assignedOfficer', 'documents.uploader', 'trashedDocuments.deletedByUser', 'notes.user', 'activities.user']);
+        $case->load(['category', 'createdByUser', 'documents.uploader', 'notes.user', 'activities.user']);
 
         $officerChanges = AuditLog::query()
             ->where('auditable_type', CaseModel::class)

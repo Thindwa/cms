@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Core\Settings\SettingsService;
+use App\Modules\CaseManagement\Models\CaseDocument;
 use App\Modules\CaseManagement\Models\CaseModel;
 use Illuminate\Console\Command;
+use Illuminate\Database\Query\JoinClause;
 
 class CasesCheckDormant extends Command
 {
@@ -18,22 +20,24 @@ class CasesCheckDormant extends Command
         $threshold = now()->subYears($dormantYears);
         $count = 0;
 
+        $latestDocSub = CaseDocument::query()
+            ->selectRaw('case_id, MAX(created_at) as latest_doc_date')
+            ->groupBy('case_id');
+
         CaseModel::query()
+            ->select('cases.*', 'latest_doc_dates.latest_doc_date')
+            ->leftJoinSub($latestDocSub, 'latest_doc_dates', function (JoinClause $join) {
+                $join->on('cases.id', '=', 'latest_doc_dates.case_id');
+            })
             ->where('status', 'active')
             ->whereNotNull('case_number')
             ->where('case_number', '!=', '')
             ->chunk(100, function ($cases) use ($threshold, &$count) {
                 foreach ($cases as $case) {
-                    $latestDocument = $case->documents()
-                        ->latest('created_at')
-                        ->first();
-
-                    if ($latestDocument) {
-                        if ($latestDocument->created_at->lt($threshold)) {
-                            $case->update(['status' => 'dormant']);
-                            $count++;
-                        }
-                    } elseif ($case->created_at->lt($threshold)) {
+                    if ($case->latest_doc_date && $case->latest_doc_date < $threshold) {
+                        $case->update(['status' => 'dormant']);
+                        $count++;
+                    } elseif (!$case->latest_doc_date && $case->created_at < $threshold) {
                         $case->update(['status' => 'dormant']);
                         $count++;
                     }

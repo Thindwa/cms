@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -230,11 +230,14 @@ class ReportController extends Controller
         $closedCases = (clone $query)->where('status', 'closed')->count();
         $upcomingHearings = (clone $query)->whereBetween('hearing_date', [now()->toDateString(), now()->addDays(30)->toDateString()])->count();
 
-        $categoryRows = (clone $query)->with('category')->get()
-            ->groupBy(fn (CaseModel $case) => $case->category?->name ?? 'Uncategorized')
-            ->map(fn (Collection $cases, string $category) => ['Category' => $category, 'Total' => $cases->count()])
-            ->sortByDesc('Total')
-            ->values()
+        $categoryRows = (clone $query)
+            ->leftJoin('case_categories', 'cases.category_id', '=', 'case_categories.id')
+            ->selectRaw("COALESCE(case_categories.name, 'Uncategorized') as category_name")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('cases.category_id', 'case_categories.name')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($row) => ['Category' => $row->category_name, 'Total' => (int) $row->total])
             ->toArray();
 
         $rows = [
@@ -291,22 +294,28 @@ class ReportController extends Controller
 
     protected function officerReportData(Builder $query): array
     {
+        $now = now();
         $rows = (clone $query)
+            ->selectRaw("COALESCE(NULLIF(TRIM(title), ''), 'Unassigned') as officer_name")
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active")
+            ->selectRaw("SUM(CASE WHEN status = 'dormant' THEN 1 ELSE 0 END) as dormant")
+            ->selectRaw("SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed")
+            ->selectRaw("SUM(CASE WHEN hearing_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as upcoming", [
+                $now->startOfDay()->toDateString(),
+                $now->copy()->addDays(30)->endOfDay()->toDateString(),
+            ])
+            ->groupBy(DB::raw("COALESCE(NULLIF(TRIM(title), ''), 'Unassigned')"))
+            ->orderByDesc('total')
             ->get()
-            ->groupBy(fn (CaseModel $case) => filled($case->title) ? trim((string) $case->title) : 'Unassigned')
-            ->map(function (Collection $cases, string $officer) {
-                $upcoming = $cases->filter(fn (CaseModel $case) => $case->hearing_date && $case->hearing_date->between(now()->startOfDay(), now()->addDays(30)->endOfDay()))->count();
-                return [
-                    'Officer' => $officer,
-                    'Cases' => $cases->count(),
-                'Active' => $cases->where('status', 'active')->count(),
-                'Dormant' => $cases->where('status', 'dormant')->count(),
-                'Closed' => $cases->where('status', 'closed')->count(),
-                'Upcoming Hearings (30d)' => $upcoming,
-                ];
-            })
-            ->sortByDesc('Cases')
-            ->values()
+            ->map(fn ($row) => [
+                'Officer' => $row->officer_name,
+                'Cases' => (int) $row->total,
+                'Active' => (int) $row->active,
+                'Dormant' => (int) $row->dormant,
+                'Closed' => (int) $row->closed,
+                'Upcoming Hearings (30d)' => (int) $row->upcoming,
+            ])
             ->toArray();
 
         return [
@@ -348,14 +357,17 @@ class ReportController extends Controller
 
     protected function categoryReportData(Builder $query): array
     {
-        $rows = (clone $query)->with('category')->get()
-            ->groupBy(fn (CaseModel $case) => $case->category?->name ?? 'Uncategorized')
-            ->map(fn (Collection $cases, string $category) => [
-                'Category' => $category,
-                'Total' => $cases->count(),
+        $rows = (clone $query)
+            ->leftJoin('case_categories', 'cases.category_id', '=', 'case_categories.id')
+            ->selectRaw("COALESCE(case_categories.name, 'Uncategorized') as category_name")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('cases.category_id', 'case_categories.name')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($row) => [
+                'Category' => $row->category_name,
+                'Total' => (int) $row->total,
             ])
-            ->sortByDesc('Total')
-            ->values()
             ->toArray();
 
         return [
@@ -374,16 +386,19 @@ class ReportController extends Controller
     protected function statusRows(Builder $query): array
     {
         $total = max((clone $query)->count(), 1);
-        return (clone $query)->get()
-            ->groupBy(fn (CaseModel $case) => filled($case->status) ? ucfirst((string) $case->status) : 'Unknown')
-            ->map(fn (Collection $cases, string $status) => [
-                'Status' => $status,
-                'Total' => $cases->count(),
-                'Share %' => round(($cases->count() / $total) * 100, 2),
-            ])
-            ->sortByDesc('Total')
-            ->values()
+        $rows = (clone $query)
+            ->selectRaw("COALESCE(NULLIF(status, ''), 'Unknown') as status_name")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('status')
+            ->orderByDesc('total')
+            ->get()
             ->toArray();
+
+        return array_map(fn ($row) => [
+            'Status' => ucfirst((string) $row->status_name),
+            'Total' => (int) $row->total,
+            'Share %' => round(((int) $row->total / $total) * 100, 2),
+        ], $rows);
     }
 
     protected function statusReportData(Builder $query): array
@@ -477,9 +492,16 @@ class ReportController extends Controller
     {
         $categories = CaseCategory::query()->orderBy('name')->pluck('name')->toArray();
         $dateField = $request->get('date_basis', 'created_at');
+        $driver = $query->getConnection()->getDriverName();
+        $monthExpr = $driver === 'mysql'
+            ? "DATE_FORMAT($dateField, '%Y-%m')"
+            : "strftime('%Y-%m', $dateField)";
 
-        $grouped = (clone $query)->with('category')->get()
-            ->groupBy(fn (CaseModel $case) => optional($case->{$dateField})?->format('Y-m') ?? 'Unknown')
+        $grouped = (clone $query)
+            ->leftJoin('case_categories', 'cases.category_id', '=', 'case_categories.id')
+            ->select([DB::raw("$monthExpr as month_group"), 'case_categories.name as category_name'])
+            ->get()
+            ->groupBy(fn ($row) => $row->month_group ?? 'Unknown')
             ->sortKeys();
 
         $rows = [];
@@ -487,7 +509,7 @@ class ReportController extends Controller
             $row = ['MONTH' => $period];
             $categorizedTotal = 0;
             foreach ($categories as $cat) {
-                $count = $cases->filter(fn ($c) => $c->category?->name === $cat)->count();
+                $count = $cases->filter(fn ($c) => ($c->category_name ?? 'Uncategorized') === $cat)->count();
                 $row[$cat] = $count;
                 $categorizedTotal += $count;
             }
@@ -528,12 +550,16 @@ class ReportController extends Controller
         $orderedMonths = array_values($orderedStarts);
         $firstStart = $orderedMonths[0];
 
-        $grouped = (clone $query)->with('category')->get()
-            ->groupBy(function (CaseModel $case) use ($dateField, $orderedNums, $orderedMonths, $firstStart) {
-                $date = $case->{$dateField};
+        $grouped = (clone $query)
+            ->leftJoin('case_categories', 'cases.category_id', '=', 'case_categories.id')
+            ->select([$dateField, 'case_categories.name as category_name'])
+            ->get()
+            ->groupBy(function ($row) use ($dateField, $orderedNums, $orderedMonths, $firstStart) {
+                $date = $row->{$dateField};
                 if (! $date) {
                     return 'Unknown';
                 }
+                $date = Carbon::parse($date);
                 $month = (int) $date->format('n');
                 $year = (int) $date->format('Y');
 
@@ -549,7 +575,7 @@ class ReportController extends Controller
             $row = ['QUARTER' => $period];
             $categorizedTotal = 0;
             foreach ($categories as $cat) {
-                $count = $cases->filter(fn ($c) => $c->category?->name === $cat)->count();
+                $count = $cases->filter(fn ($c) => ($c->category_name ?? 'Uncategorized') === $cat)->count();
                 $row[$cat] = $count;
                 $categorizedTotal += $count;
             }
