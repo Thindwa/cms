@@ -391,14 +391,13 @@ class ReportController extends Controller
             ->selectRaw('COUNT(*) as total')
             ->groupBy('status')
             ->orderByDesc('total')
-            ->get()
-            ->toArray();
+            ->get();
 
-        return array_map(fn ($row) => [
+        return $rows->map(fn ($row) => [
             'Status' => ucfirst((string) $row->status_name),
             'Total' => (int) $row->total,
             'Share %' => round(((int) $row->total / $total) * 100, 2),
-        ], $rows);
+        ])->toArray();
     }
 
     protected function statusReportData(Builder $query): array

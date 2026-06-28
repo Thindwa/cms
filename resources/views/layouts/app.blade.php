@@ -78,10 +78,21 @@
             }
         }
         @media print {
+            @page { size: landscape; margin: 10mm; }
+            body { font-size: 10px; }
             .app-sidebar, .app-topbar, .no-print { display: none !important; }
-            .app-main { margin: 0 !important; padding: 0 !important; }
-            .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+            .app-main { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+            .container, .container-fluid { max-width: 100% !important; padding: 0 !important; }
+            .card { box-shadow: none !important; border: 1px solid #ddd !important; page-break-inside: avoid; }
+            .card-body { padding: 8px !important; }
+            .table { font-size: 9px; width: 100% !important; }
+            .table th, .table td { padding: 3px 5px !important; word-break: break-word; }
             .chart-container { page-break-inside: avoid; }
+            .row { margin: 0 !important; }
+            .col-md-3, .col-md-4, .col-md-6, .col-md-2 { width: auto !important; flex: 1 1 auto !important; }
+            h1, h2, h3, h4 { font-size: 14px !important; }
+            .badge, .btn { font-size: 8px !important; }
+            .pagination, form, .table-responsive { overflow: visible !important; }
         }
     </style>
     @stack('styles')
