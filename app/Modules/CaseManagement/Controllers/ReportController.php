@@ -295,8 +295,14 @@ class ReportController extends Controller
     protected function officerReportData(Builder $query): array
     {
         $now = now();
-        $rows = (clone $query)
+
+        $sub = (clone $query)
             ->selectRaw("COALESCE(NULLIF(TRIM(title), ''), 'Unassigned') as officer_name")
+            ->selectRaw('status')
+            ->selectRaw('hearing_date');
+
+        $rows = DB::query()->fromSub($sub, 'o')
+            ->selectRaw('officer_name')
             ->selectRaw('COUNT(*) as total')
             ->selectRaw("SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active")
             ->selectRaw("SUM(CASE WHEN status = 'dormant' THEN 1 ELSE 0 END) as dormant")
@@ -305,7 +311,7 @@ class ReportController extends Controller
                 $now->startOfDay()->toDateString(),
                 $now->copy()->addDays(30)->endOfDay()->toDateString(),
             ])
-            ->groupBy(DB::raw("COALESCE(NULLIF(TRIM(title), ''), 'Unassigned')"))
+            ->groupBy('officer_name')
             ->orderByDesc('total')
             ->get()
             ->map(fn ($row) => [
