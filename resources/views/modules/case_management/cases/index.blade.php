@@ -31,10 +31,6 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('cases.index') }}" class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small">Quick Search (full-text across all fields)</label>
-                <input type="text" name="search" class="form-control form-control-sm" value="{{ request('search') }}" placeholder="Search case number, name, reference...">
-            </div>
             <div class="col-md-2">
                 <label class="form-label small">AG Ref No</label>
                 <input type="text" name="reference_number" class="form-control form-control-sm" value="{{ request('reference_number') }}" placeholder="AG/...">
@@ -72,12 +68,6 @@
                 <a href="{{ route('cases.index') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
             </div>
         </form>
-        @if(request('search'))
-            <div class="mt-2 small text-muted">
-                <i class="bi bi-search me-1"></i> Full-text search active: <strong>{{ request('search') }}</strong>
-                <a href="{{ route('cases.index') }}" class="text-decoration-none ms-2">&times; clear</a>
-            </div>
-        @endif
     </div>
 </div>
 

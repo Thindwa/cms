@@ -15,7 +15,6 @@ use App\Modules\CaseManagement\Services\ActivityService;
 use App\Modules\CaseManagement\Services\CaseManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -36,52 +35,36 @@ class CaseController extends Controller
             ->whereNotNull('case_number')
             ->where('case_number', '!=', '');
 
-        if ($request->filled('search')) {
-            $search = $request->string('search')->toString();
-            $driver = $query->getConnection()->getDriverName();
-            if ($driver === 'mysql') {
-                $query->whereRaw('MATCH (case_number, claimant, defendant, reference_number, description) AGAINST (? IN BOOLEAN MODE)', [$search]);
-            } else {
-                $query->where(function ($q) use ($search) {
-                    $q->where('case_number', 'like', '%' . $search . '%')
-                        ->orWhere('claimant', 'like', '%' . $search . '%')
-                        ->orWhere('defendant', 'like', '%' . $search . '%')
-                        ->orWhere('reference_number', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%');
-                });
-            }
-        } else {
-            if ($request->filled('cause_number')) {
-                $query->where('cause_number', 'like', '%' . $request->cause_number . '%');
-            }
-            if ($request->filled('title')) {
-                $query->where('title', 'like', '%' . $request->title . '%');
-            }
-            if ($request->filled('reference_number')) {
-                $query->where('reference_number', 'like', '%' . $request->reference_number . '%');
-            }
-            if ($request->filled('party')) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('claimant', 'like', '%' . $request->party . '%')
-                        ->orWhere('defendant', 'like', '%' . $request->party . '%');
-                });
-            }
-            if ($request->filled('date_from')) {
-                $query->whereDate('date_filed', '>=', $request->date_from);
-            }
-            if ($request->filled('date_to')) {
-                $query->whereDate('date_filed', '<=', $request->date_to);
-            }
-            if ($request->filled('hearing_date_from')) {
-                $query->whereDate('hearing_date', '>=', $request->hearing_date_from);
-            }
-            if ($request->filled('hearing_date_to')) {
-                $query->whereDate('hearing_date', '<=', $request->hearing_date_to);
-            }
+        if ($request->filled('cause_number')) {
+            $query->where('cause_number', 'like', '%' . $request->cause_number . '%');
+        }
+        if ($request->filled('title')) {
+            $query->where('title', 'like', '%' . $request->title . '%');
+        }
+        if ($request->filled('reference_number')) {
+            $query->where('reference_number', 'like', '%' . $request->reference_number . '%');
+        }
+        if ($request->filled('party')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('claimant', 'like', '%' . $request->party . '%')
+                    ->orWhere('defendant', 'like', '%' . $request->party . '%');
+            });
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('date_filed', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date_filed', '<=', $request->date_to);
+        }
+        if ($request->filled('hearing_date_from')) {
+            $query->whereDate('hearing_date', '>=', $request->hearing_date_from);
+        }
+        if ($request->filled('hearing_date_to')) {
+            $query->whereDate('hearing_date', '<=', $request->hearing_date_to);
         }
 
         $filterKeys = [
-            'search', 'cause_number', 'title', 'reference_number', 'party',
+            'cause_number', 'title', 'reference_number', 'party',
             'date_from', 'date_to', 'hearing_date_from', 'hearing_date_to',
         ];
         $activeFilters = collect($filterKeys)

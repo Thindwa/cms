@@ -161,10 +161,7 @@
         @can('execute', $batch)
         @if(!$alreadyImported)
             <form method="POST" action="{{ route('cases.imports.execute', $batch) }}"
-                  id="execute-import-form"
-                  data-confirm-title="Execute Final Import"
-                  data-confirm-message="Run final import now? This will write changes to case records."
-                  data-confirm-button="Execute Import">
+                  id="execute-import-form">
                 @csrf
                 <button class="btn btn-success" {{ (($analysis['stats']['blocking_issues'] ?? 0) > 0) ? 'disabled' : '' }}>Execute Final Import</button>
             </form>
@@ -277,11 +274,16 @@
     let current = 5;
 
     form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
         if (form.dataset.ajaxSubmitting === '1') {
             return;
         }
 
-        event.preventDefault();
+        if (!confirm('Run final import now? This will write changes to case records.')) {
+            return;
+        }
+
         form.dataset.ajaxSubmitting = '1';
 
         progressCard.classList.remove('d-none');
